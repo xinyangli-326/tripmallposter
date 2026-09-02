@@ -50,7 +50,7 @@ function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
   if(!ids.length) return;
-  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:(r.image||'')}; });
+  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:r.image?('data/images/'+String(id)+'.jpg'):''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
@@ -63,5 +63,6 @@ function card(items){
 async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
 loadData();
 </script></body></html>
+
 
 
