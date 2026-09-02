@@ -50,17 +50,18 @@ function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
   if(!ids.length) return;
-  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:'data/images/'+String(id)+'.jpg'}; });
+  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:(r.image||'')}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
   const ps=mode==='grid'?items.slice(0,4):items.slice(0,1); const sty=mode==='single'?'grid-template-columns:1fr':'';
-  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="${p.image}" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
+  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="\${p.image}" crossorigin="anonymous" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
   return `<div class="mcard ${mode==='single'?'msingle':''}"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="${sty}">${prods}</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">${f1}</div><div class="f3">${f2}</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>`;
 }
 async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
 loadData();
 </script></body></html>
+
 
