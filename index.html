@@ -1,0 +1,66 @@
+<!doctype html><html><head><meta charset="utf-8"><title>TripMALL 商品海报生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+body{font-family:"Microsoft YaHei",sans-serif;background:#f4f4f4;margin:0}
+.wrap{max-width:1320px;margin:20px auto;display:flex;gap:20px;padding:20px}
+.left{flex:0 0 400px;background:#fff;border-radius:10px;padding:20px}
+.right{flex:1;background:#fff;border-radius:10px;padding:20px;overflow:auto}
+h1{font-size:19px;margin:0 0 6px}
+.hint{font-size:12px;color:#888;line-height:1.5}
+label{display:block;font-weight:700;margin:12px 0 4px;font-size:13px}
+textarea,input[type=text]{width:100%;box-sizing:border-box;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:12px}
+textarea{height:240px;font-family:monospace;font-size:11px}
+button{background:#e08a00;color:#fff;border:0;padding:9px 16px;border-radius:6px;font-size:14px;cursor:pointer;margin:10px 6px 0 0}
+button.gr{background:#5a8}
+.mode{display:flex;gap:8px;margin:8px 0}.mode button{background:#eee;color:#333;margin:0}.mode button.on{background:#e08a00;color:#fff}
+.mcard{width:740px;background:#fff;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.mheadimg{width:100%;display:block}
+.mtrust{display:flex;justify-content:center;gap:28px;background:#fff7ef;padding:8px 0;font-size:14px;color:#e08a00}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px 28px}
+.mprod{border:1px solid #f0f0f0;border-radius:6px;overflow:hidden}
+.mimg{height:250px;background:#f6f6f6;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:13px;overflow:hidden}
+.mimg img{width:100%;height:100%;object-fit:contain}
+.mpid{font-size:12px;color:#999;margin:9px 13px 0}.mname{font-size:18px;font-weight:800;color:#222;margin:3px 13px 7px}
+.mprice{font-size:15px;color:#e4393c;margin:0 13px}.mprice b{font-size:25px;font-weight:800}.mprice .del{font-size:14px;color:#bbb;text-decoration:line-through;margin-left:7px}
+.mtags{display:flex;flex-wrap:wrap;gap:7px;padding:11px 13px 15px}.mtags span{border:1px solid #f0b46b;color:#c07d00;border-radius:3px;padding:2px 9px;font-size:12px}
+.mfoot{background:#fafaf8;padding:14px 28px;display:flex;justify-content:space-between;align-items:flex-start;border-top:1px solid #eee}
+.mfoot .f1{font-weight:800;color:#e08a00;font-size:16px}.mfoot .f2{font-size:12px;color:#444;margin:5px 0}.mfoot .f3{font-size:12px;color:#888}
+.mfoot .qr{width:92px;height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mfoot .qr img{width:86px;height:86px;display:block}.mfoot .qr .cap{font-size:10px;color:#aaa;margin-top:2px}
+.msingle .mimg{height:440px}.msingle .mpid{font-size:14px}.msingle .mname{font-size:32px}.msingle .mprice b{font-size:42px}.msingle .mtags span{font-size:13px}
+</style></head><body>
+<div class="wrap">
+<div class="left"><h1>TripMALL 商品海报生成器</h1>
+<p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按原版式出图（含信任栏、底部购买路径导航、二维码）。</p>
+<textarea id="ids">61187
+69299
+67461
+67327</textarea>
+<label>页脚第二行（优惠话术）</label><input id="foot1" value="新客20元无门槛优惠券 叠加海量店铺优惠券">
+<label>页脚第三行（购买路径）</label><input id="foot2" value="电脑端：携程EBooking->商机中心->服务市场；APP端：携程EBooking->用品采购">
+<div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
+<button onclick="gen()">生成</button><button class="gr" onclick="exportPng()">导出 PNG</button>
+</div>
+<div class="right"><div id="preview"></div></div></div>
+<div id="cardBox" hidden></div>
+<script>
+let mode="grid", DATA={};
+async function loadData(){ try{ DATA = await fetch('data/products.json').then(r=>r.json()); }catch(e){ DATA={}; } document.getElementById('hint').innerText = '已加载商品 ' + Object.keys(DATA).length + ' 个。每行填一个商品ID。'; }
+function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
+async function gen(){
+  const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
+  if(!ids.length) return;
+  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:'data/images/'+String(id)+'.jpg'}; });
+  const box=document.getElementById('cardBox'); box.innerHTML=card(items);
+  const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
+}
+function card(items){
+  const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
+  const ps=mode==='grid'?items.slice(0,4):items.slice(0,1); const sty=mode==='single'?'grid-template-columns:1fr':'';
+  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="${p.image}" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
+  return `<div class="mcard ${mode==='single'?'msingle':''}"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="${sty}">${prods}</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">${f1}</div><div class="f3">${f2}</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>`;
+}
+async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
+loadData();
+</script></body></html>
+
