@@ -1,4 +1,8 @@
-<!doctype html><html><head><meta charset="utf-8"><title>TripMALL 商品海报生成器</title>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TripMALL 商品海报生成器</title>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 body{font-family:"Microsoft YaHei",sans-serif;background:#f4f4f4;margin:0}
@@ -28,7 +32,9 @@ button.gr{background:#5a8}
 .mfoot .qr{width:92px;height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .mfoot .qr img{width:86px;height:86px;display:block}.mfoot .qr .cap{font-size:10px;color:#aaa;margin-top:2px}
 .msingle .mimg{height:440px}.msingle .mpid{font-size:14px}.msingle .mname{font-size:32px}.msingle .mprice b{font-size:42px}.msingle .mtags span{font-size:13px}
-</style></head><body>
+</style>
+</head>
+<body>
 <div class="wrap">
 <div class="left"><h1>TripMALL 商品海报生成器</h1>
 <p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按原版式出图（含信任栏、底部购买路径导航、二维码）。</p>
@@ -41,10 +47,11 @@ button.gr{background:#5a8}
 <div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
 <button onclick="gen()">生成</button><button class="gr" onclick="exportPng()">导出 PNG</button>
 </div>
-<div class="right"><div id="preview"></div></div></div>
+<div class="right"><div id="preview"></div></div>
+</div>
 <div id="cardBox" hidden></div>
 <script>
-let mode="grid", DATA={};
+let mode='grid', DATA={};
 async function loadData(){ try{ DATA = await fetch('data/products.json').then(r=>r.json()); }catch(e){ DATA={}; } document.getElementById('hint').innerText = '已加载商品 ' + Object.keys(DATA).length + ' 个。每行填一个商品ID。'; }
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 async function gen(){
@@ -57,13 +64,14 @@ async function gen(){
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
   const ps=mode==='grid'?items.slice(0,4):items.slice(0,1); const sty=mode==='single'?'grid-template-columns:1fr':'';
-  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="\${p.image}" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
+  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="${p.image}" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
   return `<div class="mcard ${mode==='single'?'msingle':''}"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="${sty}">${prods}</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">${f1}</div><div class="f3">${f2}</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>`;
 }
 async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
 loadData();
-</script></body></html>
-
+</script>
+</body>
+</html>
 
 
 
