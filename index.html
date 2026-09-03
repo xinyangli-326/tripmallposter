@@ -38,8 +38,8 @@ button.gr{background:#5a8}
 <div class="wrap">
 <div class="left"><h1>TripMALL 商品海报生成器</h1>
 <p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按原版式出图（含信任栏、底部购买路径导航、二维码）。</p>
-<textarea id="ids">61187
-69299
+<textarea id="ids">6517
+69047
 67461
 67327</textarea>
 <label>页脚第二行（优惠话术）</label><input id="foot1" value="新客20元无门槛优惠券 叠加海量店铺优惠券">
@@ -54,24 +54,25 @@ button.gr{background:#5a8}
 let mode='grid', DATA={};
 async function loadData(){ try{ DATA = await fetch('data/products.json').then(r=>r.json()); }catch(e){ DATA={}; } document.getElementById('hint').innerText = '已加载商品 ' + Object.keys(DATA).length + ' 个。每行填一个商品ID。'; }
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
+function imgHTML(p){
+  if(!p.image) return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:13px">【 商品图 '+p.id+' 暂无 】</div>';
+  return '<img src="'+p.image+'" crossorigin="anonymous" onerror="this.parentNode.textContent=\'【 商品图 '+p.id+' 加载失败 】\';this.parentNode.style.cssText=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:13px\'">';
+}
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
   if(!ids.length) return;
-  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(r.tags&&r.tags.length?r.tags:[]), image:'data/images/'+String(id)+'.jpg'}; });
+  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[]), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
   const ps=mode==='grid'?items.slice(0,4):items.slice(0,1); const sty=mode==='single'?'grid-template-columns:1fr':'';
-  const prods=ps.map(p=>`<div class="mprod"><div class="mimg"><img src="${p.image}" onerror="this.alt='【 商品图 ${p.id} 】';this.removeAttribute('src')"></div><div class="mpid">${mode==='single'?'商品ID: ':'ID: '}${p.id}</div><div class="mname">${p.name}</div><div class="mprice">¥<b>${p.price}</b> 元/${p.unit||'件'}</div><div class="mtags">${(p.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div></div>`).join('');
-  return `<div class="mcard ${mode==='single'?'msingle':''}"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="${sty}">${prods}</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">${f1}</div><div class="f3">${f2}</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>`;
+  const prods=ps.map(p=>'<div class="mprod"><div class="mimg">'+imgHTML(p)+'</div><div class="mpid">'+(mode==='single'?'商品ID: ':'ID: ')+p.id+'</div><div class="mname">'+p.name+'</div><div class="mprice">¥<b>'+p.price+'</b> 元/'+(p.unit||'件')+'</div><div class="mtags">'+(p.tags||[]).map(t=>'<span>'+t+'</span>').join('')+'</div></div>').join('');
+  return '<div class="mcard '+(mode==='single'?'msingle':'')+'"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="'+sty+'">'+prods+'</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">'+f1+'</div><div class="f3">'+f2+'</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>';
 }
-async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
+async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
 loadData();
 </script>
 </body>
 </html>
-
-
-
