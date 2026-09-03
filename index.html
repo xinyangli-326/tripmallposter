@@ -71,7 +71,22 @@ function card(items){
   const prods=ps.map(p=>'<div class="mprod"><div class="mimg">'+imgHTML(p)+'</div><div class="mpid">'+(mode==='single'?'商品ID: ':'ID: ')+p.id+'</div><div class="mname">'+p.name+'</div><div class="mprice">¥<b>'+p.price+'</b> 元/'+(p.unit||'件')+'</div><div class="mtags">'+(p.tags||[]).map(t=>'<span>'+t+'</span>').join('')+'</div></div>').join('');
   return '<div class="mcard '+(mode==='single'?'msingle':'')+'"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="'+sty+'">'+prods+'</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">'+f1+'</div><div class="f3">'+f2+'</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>';
 }
-async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
+async function waitForImages(el){
+  await Promise.all([...el.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
+}
+async function exportPng(){
+  let el=document.querySelector('#preview .mcard');
+  if(!el){ await gen(); el=document.querySelector('#preview .mcard'); }
+  if(!el) return;
+  await waitForImages(el);
+  const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false,backgroundColor:'#fff'});
+  c.toBlob(blob=>{
+    if(!blob) return alert('海报生成失败，请刷新页面后重试');
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='product-card.png';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  },'image/png');
+}
 loadData();
 </script>
 </body>
