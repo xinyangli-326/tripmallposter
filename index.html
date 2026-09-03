@@ -80,28 +80,52 @@ function inferUnit(p){
   return p.unit&&p.unit!=='件'?p.unit:'件';
 }
 function smartTags(p){
-  const n=p.name||'', tags=[];
-  const add=t=>{ if(t&&!tags.includes(t)&&tags.length<3) tags.push(t); };
-  const campaign=document.getElementById('foot1')?.value||'';
-  const discount=campaign.match(/新客\s*(\d+)元/);
-  if(discount) add('新客立减'+discount[1]+'元');
-  if(/叠加/.test(campaign)&&/优惠券|券/.test(campaign)) add('优惠券可叠加');
-  else if(/优惠券|领券/.test(campaign)) add('领券立减');
-  const promo=[[/全国包邮|包邮/,'全国包邮'],[/满\d+减\d+|满减/,'满减优惠'],[/买\d+赠\d+|买赠/,'买赠活动'],[/秒杀/,'限时秒杀'],[/直降|特价|促销/,'限时特惠'],[/优惠券|领券/,'领券立减']];
-  promo.forEach(([r,t])=>{if(r.test(n)) add(t)});
-  if(p.sales>=100000) add('爆款热销'); else if(p.sales>=10000) add('酒店热卖'); else if(p.sales>=1000) add('采购优选');
-  const features=[
-    [/一次性/,'洁净一次性'],[/母婴|婴儿/,'母婴级洁净'],[/白茶|香氛/,'清新香氛'],[/加大|大号|超大/,'加大尺寸'],
-    [/木棉/,'木棉材质'],[/纯棉|全棉/,'亲肤纯棉'],[/竹浆|原生木浆/,'原生好材质'],[/4层|四层/,'四层加厚'],
-    [/加厚|厚款/,'加厚耐用'],[/环保|可降解/,'环保材质'],[/天然水|矿泉水/,'天然水质'],[/550ml|500ml/,'酒店常用规格'],
-    [/24瓶|整箱/,'整箱更划算'],[/立顿|农夫山泉|今麦郎|金可儿|穗宝/,'经典品牌'],[/高端|精选|精品/,'品质精选'],
-    [/民宿|酒店专用/,'酒店专用'],[/防滑/,'安全防滑'],[/柔软|亲肤/,'柔软亲肤'],[/速溶/,'便捷即享']
+  const n=p.name||'', features=[], benefits=[];
+  const add=(list,t)=>{ if(t&&!features.includes(t)&&!benefits.includes(t)&&list.length<3) list.push(t); };
+  const featureRules=[
+    [/防滑/,'轻盈防滑'],[/儿童/,'儿童专用'],[/一次性/,'一次性洁净'],[/铝膜/,'双面铝膜'],[/洗漱套装|牙具.*梳子|梳子.*牙具/,'洗漱配套'],
+    [/白茶/,'经典白茶'],[/香氛|香味|香型/,'清雅留香'],[/30克|30g/i,'30g便携装'],[/小瓶/,'便携小瓶'],[/洗发.*沐浴|沐浴.*洗发/,'洗护二合一'],
+    [/4层|四层/,'四层加厚'],[/40克|40g/i,'40g足量'],[/印花/,'精美印花'],[/有芯/,'有芯易用'],[/空芯/,'空芯卷纸'],
+    [/纯棉|全棉/,'亲肤纯棉'],[/木棉/,'木棉材质'],[/竹浆|原生木浆/,'原生好材质'],[/加厚|厚款/,'加厚耐用'],[/环保|可降解/,'环保材质'],
+    [/天然水|矿泉水/,'天然水质'],[/550ml/i,'550ml常用装'],[/500ml/i,'500ml常用装'],[/24瓶/,'24瓶整箱装'],[/整箱/,'整箱采购'],
+    [/床垫.*25cm|25cm.*床垫/i,'25cm舒适厚度'],[/床垫/,'舒适承托'],[/柔软|亲肤/,'柔软亲肤'],[/吸水/,'快速吸水'],[/耐磨/,'耐磨耐用'],
+    [/酒店专用|酒店版/,'酒店专用'],[/民宿/,'民宿适用'],[/大号|加大|超大/,'加大尺寸'],[/独立包装/,'独立包装'],[/无纺布/,'无纺布材质'],
+    [/立顿|农夫山泉|今麦郎|金可儿|穗宝/,'经典品牌'],[/高端|精选|精品/,'品质精选']
   ];
-  features.forEach(([r,t])=>{if(r.test(n)) add(t)});
-  if(tags.length<3 && Number(p.price)>0 && Number(p.price)<1) add('经济实惠');
-  if(tags.length<3 && p.type) add(p.type==='客房用品'?'客房采购优选':p.type);
-  if(tags.length<3) add('品质保证');
-  return tags;
+  featureRules.forEach(([r,t])=>{if(r.test(n)) add(features,t)});
+  const benefitRules=[
+    [/全国包邮|包邮/,'全国包邮'],[/新品上线|新品/,'新品尝鲜'],[/满\d+减\d+|满减/,'满减优惠'],[/买\d+赠\d+|买赠/,'买赠活动'],
+    [/秒杀/,'限时秒杀'],[/直降|特价|促销/,'限时特惠'],[/优惠券|领券/,'领券立减']
+  ];
+  benefitRules.forEach(([r,t])=>{if(r.test(n)) add(benefits,t)});
+  if(!benefits.length){
+    if(/拖鞋/.test(n)) add(benefits,'高颜值新款');
+    else if(/铝膜/.test(n)) add(benefits,'密封防潮');
+    else if(/洗发|沐浴|洗护/.test(n)) add(benefits,'泡沫绵密');
+    else if(/卷纸|纸巾/.test(n)&&Number(p.price)<1) add(benefits,'超值低价');
+    else if(/24瓶|整箱/.test(n)) add(benefits,'整箱更划算');
+    else if(p.sales>=100000) add(benefits,'爆款热销');
+    else if(p.sales>=10000) add(benefits,'酒店热卖');
+    else if(/茶包|袋泡茶/.test(n)) add(benefits,'经典味道');
+    else if(Number(p.price)>0&&Number(p.price)<1) add(benefits,'经济实惠');
+    else if(p.sales>=1000) add(benefits,'采购优选');
+    else add(benefits,'品质保证');
+  }
+  const result=features.slice(0,2);
+  const addResult=t=>{if(t&&!result.includes(t)&&result.length<3) result.push(t);};
+  if(result.length<2){
+    if(/拖鞋/.test(n)) addResult('舒适好穿');
+    else if(/面巾|毛巾|浴巾/.test(n)) addResult('柔软亲肤');
+    else if(/牙刷/.test(n)) addResult('细密刷毛');
+    else if(/茶包|袋泡茶/.test(n)) addResult('经典味道');
+    else if(/纸巾|卷纸/.test(n)) addResult('清洁易用');
+    else if(/洗发|沐浴/.test(n)) addResult('泡沫细腻');
+    else if(/水|饮料/.test(n)) addResult('酒店常备');
+    else addResult(p.type==='客房用品'?'客房适用':'品质实用');
+  }
+  addResult(benefits[0]);
+  for(const fallback of ['品质精选','经济实用','采购优选']) addResult(fallback);
+  return result.slice(0,3);
 }
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
