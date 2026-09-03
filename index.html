@@ -79,7 +79,27 @@ function inferUnit(p){
   for(const [rule,unit] of rules) if(rule.test(n)) return unit;
   return p.unit&&p.unit!=='件'?p.unit:'件';
 }
+const DETAIL_SELLING_POINTS={
+  '4212':['集采低价','防滑舒适','经济适用'],
+  '3298':['限时优惠','握感舒适','刷毛软硬适中'],
+  '4773':['限时特惠','经典口味','独立包装'],
+  '61965':['限时特惠','全棉触感','支持定制'],
+  '6831':['集采低价','湿水不破','柔软亲肤'],
+  '7445':['限时优惠','独立包装','柔软亲肤'],
+  '68115':['限时特惠','国民品牌','品质好水'],
+  '67573':['新客立减20元','AI机器人智能清洁','专业水质检测管理'],
+  '6517':['多买更优惠','亲肤针织面料','软硬适中'],
+  '6651':['采购优惠价','独立袋装弹簧','偏硬护脊承托'],
+  '69047':['大货采购优惠','护脊弹簧承托','硬感稳固支撑'],
+  '69049':['1元样板体验','护脊弹簧承托','硬感稳固支撑']
+};
+function uniqueTags(tags){
+  const seen=new Set();
+  return tags.filter(tag=>{const key=String(tag).replace(/[\s·、，,。/]/g,'');if(!key||seen.has(key))return false;seen.add(key);return true;});
+}
 function smartTags(p){
+  const detailTags=DETAIL_SELLING_POINTS[String(p.id)];
+  if(detailTags) return uniqueTags(detailTags).slice(0,3);
   const n=p.name||'', features=[], benefits=[];
   const add=(list,t)=>{ if(t&&!features.includes(t)&&!benefits.includes(t)&&list.length<3) list.push(t); };
   const featureRules=[
@@ -88,6 +108,7 @@ function smartTags(p){
     [/4层|四层/,'四层加厚'],[/40克|40g/i,'40g足量'],[/印花/,'精美印花'],[/有芯/,'有芯易用'],[/空芯/,'空芯卷纸'],
     [/纯棉|全棉/,'亲肤纯棉'],[/木棉/,'木棉材质'],[/竹浆|原生木浆/,'原生好材质'],[/加厚|厚款/,'加厚耐用'],[/环保|可降解/,'环保材质'],
     [/天然水|矿泉水/,'天然水质'],[/550ml/i,'550ml常用装'],[/500ml/i,'500ml常用装'],[/24瓶/,'24瓶整箱装'],[/整箱/,'整箱采购'],
+    [/独立袋装弹簧/,'独立袋装弹簧'],[/偏硬|硬款|硬床垫/,'偏硬稳固支撑'],[/乳胶/,'乳胶舒适层'],[/椰棕|棕垫/,'天然椰棕层'],[/记忆棉/,'释压记忆棉'],
     [/床垫.*25cm|25cm.*床垫/i,'25cm舒适厚度'],[/床垫/,'舒适承托'],[/柔软|亲肤/,'柔软亲肤'],[/吸水/,'快速吸水'],[/耐磨/,'耐磨耐用'],
     [/酒店专用|酒店版/,'酒店专用'],[/民宿/,'民宿适用'],[/大号|加大|超大/,'加大尺寸'],[/独立包装/,'独立包装'],[/无纺布/,'无纺布材质'],
     [/立顿|农夫山泉|今麦郎|金可儿|穗宝/,'经典品牌'],[/高端|精选|精品/,'品质精选']
@@ -111,21 +132,22 @@ function smartTags(p){
     else if(p.sales>=1000) add(benefits,'采购优选');
     else add(benefits,'品质保证');
   }
-  const result=features.slice(0,2);
+  const result=[];
   const addResult=t=>{if(t&&!result.includes(t)&&result.length<3) result.push(t);};
-  if(result.length<2){
-    if(/拖鞋/.test(n)) addResult('舒适好穿');
-    else if(/面巾|毛巾|浴巾/.test(n)) addResult('柔软亲肤');
-    else if(/牙刷/.test(n)) addResult('细密刷毛');
-    else if(/茶包|袋泡茶/.test(n)) addResult('经典味道');
-    else if(/纸巾|卷纸/.test(n)) addResult('清洁易用');
-    else if(/洗发|沐浴/.test(n)) addResult('泡沫细腻');
-    else if(/水|饮料/.test(n)) addResult('酒店常备');
-    else addResult(p.type==='客房用品'?'客房适用':'品质实用');
-  }
   addResult(benefits[0]);
-  for(const fallback of ['品质精选','经济实用','采购优选']) addResult(fallback);
-  return result.slice(0,3);
+  features.slice(0,2).forEach(addResult);
+  if(result.length<3){
+    if(/拖鞋/.test(n)) addResult('防滑舒适');
+    else if(/面巾|毛巾|浴巾/.test(n)) addResult('柔软亲肤');
+    else if(/牙刷/.test(n)) addResult('刷毛软硬适中');
+    else if(/茶包|袋泡茶/.test(n)) addResult('经典口味');
+    else if(/纸巾|卷纸/.test(n)) addResult('湿水不破');
+    else if(/洗发|沐浴/.test(n)) addResult('泡沫细腻');
+    else if(/水|饮料/.test(n)) addResult('品质好水');
+    else addResult(p.type==='客房用品'?'经济适用':'品质实用');
+  }
+  for(const fallback of ['柔软亲肤','支持定制','品质精选']) addResult(fallback);
+  return uniqueTags(result).slice(0,3);
 }
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
