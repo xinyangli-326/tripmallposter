@@ -61,14 +61,52 @@ function imgHTML(p){
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
   if(!ids.length) return;
-  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'件', tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[]), image:r.image||''}; });
+  const items=ids.map(id=>{ const r=DATA[String(id)]||{}; return {id, name:r.name||('商品'+id), price:r.price||'', unit:r.unit||'', tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[]), image:r.image||'', type:r.type||'', supplier:r.supplier||'', sales:Number(r.sales)||0}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
+}
+function inferUnit(p){
+  const n=p.name||'';
+  const slash=n.match(/\/\s*(箱|瓶|套|包|袋|盒|卷|张|桶|罐|支|个|条|床|台|只|双|提|组|片|本|杯|枚|把|块|米)/i);
+  if(slash) return slash[1];
+  const rules=[
+    [/床垫|床褥/,'张'],[/洗发|沐浴|洗手液|护发|润肤|消毒液|矿泉水|饮用水|饮料|香水/,'瓶'],
+    [/面巾|毛巾|浴巾|牙具套装|洗漱套装|套装/,'套'],[/茶包|袋泡茶|纸巾包|小包/,'包'],
+    [/卷纸|小卷纸|大盘纸|保鲜膜/,'卷'],[/垃圾袋|洗衣袋|购物袋/,'袋'],[/牙刷|梳子|剃须刀|圆珠笔/,'支'],
+    [/拖鞋|手套|袜/,'双'],[/枕芯|枕头|被芯|被子|床单|被套|浴袍/,'条'],[/纸杯|咖啡杯|茶杯/,'个'],
+    [/抽纸|湿巾|香皂|肥皂/,'盒'],[/桶装|清洁剂/,'桶']
+  ];
+  for(const [rule,unit] of rules) if(rule.test(n)) return unit;
+  return p.unit&&p.unit!=='件'?p.unit:'件';
+}
+function smartTags(p){
+  const n=p.name||'', tags=[];
+  const add=t=>{ if(t&&!tags.includes(t)&&tags.length<3) tags.push(t); };
+  const campaign=document.getElementById('foot1')?.value||'';
+  const discount=campaign.match(/新客\s*(\d+)元/);
+  if(discount) add('新客立减'+discount[1]+'元');
+  if(/叠加/.test(campaign)&&/优惠券|券/.test(campaign)) add('优惠券可叠加');
+  else if(/优惠券|领券/.test(campaign)) add('领券立减');
+  const promo=[[/全国包邮|包邮/,'全国包邮'],[/满\d+减\d+|满减/,'满减优惠'],[/买\d+赠\d+|买赠/,'买赠活动'],[/秒杀/,'限时秒杀'],[/直降|特价|促销/,'限时特惠'],[/优惠券|领券/,'领券立减']];
+  promo.forEach(([r,t])=>{if(r.test(n)) add(t)});
+  if(p.sales>=100000) add('爆款热销'); else if(p.sales>=10000) add('酒店热卖'); else if(p.sales>=1000) add('采购优选');
+  const features=[
+    [/一次性/,'洁净一次性'],[/母婴|婴儿/,'母婴级洁净'],[/白茶|香氛/,'清新香氛'],[/加大|大号|超大/,'加大尺寸'],
+    [/木棉/,'木棉材质'],[/纯棉|全棉/,'亲肤纯棉'],[/竹浆|原生木浆/,'原生好材质'],[/4层|四层/,'四层加厚'],
+    [/加厚|厚款/,'加厚耐用'],[/环保|可降解/,'环保材质'],[/天然水|矿泉水/,'天然水质'],[/550ml|500ml/,'酒店常用规格'],
+    [/24瓶|整箱/,'整箱更划算'],[/立顿|农夫山泉|今麦郎|金可儿|穗宝/,'经典品牌'],[/高端|精选|精品/,'品质精选'],
+    [/民宿|酒店专用/,'酒店专用'],[/防滑/,'安全防滑'],[/柔软|亲肤/,'柔软亲肤'],[/速溶/,'便捷即享']
+  ];
+  features.forEach(([r,t])=>{if(r.test(n)) add(t)});
+  if(tags.length<3 && Number(p.price)>0 && Number(p.price)<1) add('经济实惠');
+  if(tags.length<3 && p.type) add(p.type==='客房用品'?'客房采购优选':p.type);
+  if(tags.length<3) add('品质保证');
+  return tags;
 }
 function card(items){
   const f1=document.getElementById('foot1').value,f2=document.getElementById('foot2').value;
   const ps=mode==='grid'?items.slice(0,4):items.slice(0,1); const sty=mode==='single'?'grid-template-columns:1fr':'';
-  const prods=ps.map(p=>'<div class="mprod"><div class="mimg">'+imgHTML(p)+'</div><div class="mpid">'+(mode==='single'?'商品ID: ':'ID: ')+p.id+'</div><div class="mname">'+p.name+'</div><div class="mprice">¥<b>'+p.price+'</b> 元/'+(p.unit||'件')+'</div><div class="mtags">'+(p.tags||[]).map(t=>'<span>'+t+'</span>').join('')+'</div></div>').join('');
+  const prods=ps.map(p=>'<div class="mprod"><div class="mimg">'+imgHTML(p)+'</div><div class="mpid">'+(mode==='single'?'商品ID: ':'ID: ')+p.id+'</div><div class="mname">'+p.name+'</div><div class="mprice">¥<b>'+p.price+'</b> 元/'+inferUnit(p)+'</div><div class="mtags">'+smartTags(p).map(t=>'<span>'+t+'</span>').join('')+'</div></div>').join('');
   return '<div class="mcard '+(mode==='single'?'msingle':'')+'"><img class="mheadimg" src="logo.png" alt="TripMALL"><div class="mtrust"><span>集采低价</span><span>房券换物</span><span>7天无理由退款</span><span>品质保证</span><span>免费开票</span></div><div class="mgrid" style="'+sty+'">'+prods+'</div><div class="mfoot"><div><div class="f1">TRIPMALL 服务市场</div><div class="f2">'+f1+'</div><div class="f3">'+f2+'</div></div><div class="qr"><img src="qr.png" alt="QR"><div class="cap">扫码领券立减</div></div></div></div>';
 }
 async function waitForImages(el){
