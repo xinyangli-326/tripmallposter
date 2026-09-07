@@ -65,11 +65,10 @@ button.gr{background:#5a8}
 .bcard{width:540px;height:886px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('blue_bg.png') center/100% 100% no-repeat}
 .blogo{position:absolute;left:14px;top:12px;width:220px;height:50px;background:linear-gradient(#2f9de0,#2a66bb);border-radius:25px;display:flex;align-items:center;justify-content:center;padding:6px 10px;box-shadow:0 2px 6px rgba(0,0,0,.18);z-index:6}
 .blogo img{max-height:90%;max-width:92%;object-fit:contain}
-.bprod{position:absolute;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.14)}
-.bprice{position:absolute;left:8px;top:8px;background:#fff;border-radius:12px;padding:3px 9px;color:#1c6fbd;font-weight:800;font-size:15px;z-index:3;box-shadow:0 2px 5px rgba(0,0,0,.15)}
-.bpimg{position:absolute;left:8px;right:8px;top:40px;bottom:8px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:10px;overflow:hidden}
+.bprice{position:absolute;background:#fff;border-radius:12px;padding:4px 12px;color:#1c6fbd;font-weight:800;font-size:16px;z-index:3;box-shadow:0 2px 5px rgba(0,0,0,.15)}
+.bpimg{position:absolute;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;overflow:hidden}
 .bpimg img{width:100%;height:100%;object-fit:contain}
-.bname{position:absolute;text-align:center;color:#2b2b2b;font-weight:800;font-size:13px;line-height:1.25;z-index:2}
+.bname{position:absolute;text-align:center;color:#2b2b2b;font-weight:800;font-size:13px;line-height:1.25;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bid{position:absolute;text-align:center;color:#7a7a7a;font-size:10px;font-weight:600;z-index:2}
 .bqr{position:absolute;background:#fff;border-radius:8px;padding:5px;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
 .bqr img{width:100%;height:100%;object-fit:contain}
@@ -169,19 +168,18 @@ function redCard(items){
 }
 function blueCard(items){
   const ps=items.slice(0,4);
-  const CELLS=[
-    {l:57,t:283,w:183,h:230,c:'#7cc98a',nt:516,idt:544},
-    {l:267,t:283,w:205,h:230,c:'#f6e25c',nt:516,idt:544},
-    {l:57,t:540,w:183,h:216,c:'#f6907e',nt:772,idt:800},
-    {l:267,t:540,w:205,h:216,c:'#f7c0cc',nt:772,idt:800}
+  const CARDS=[
+    {l:82,t:289,w:158,h:219},
+    {l:271,t:289,w:214,h:219},
+    {l:82,t:541,w:158,h:220},
+    {l:271,t:541,w:214,h:220}
   ];
   let h='<div class="bcard"><div class="blogo"><img src="whitelogo.png" alt="logo"></div>';
-  CELLS.forEach((cd,i)=>{ const p=ps[i];
-    h+='<div class="bprod" style="left:'+cd.l+'px;top:'+cd.t+'px;width:'+cd.w+'px;height:'+cd.h+'px;background:'+cd.c+'">';
-    if(p) h+='<div class="bprice">¥'+esc(p.price)+'/'+esc(p.unit||'件')+'</div>';
-    h+='<div class="bpimg">'+(p?imgHTML(p):'')+'</div></div>';
-    h+='<div class="bname" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+cd.nt+'px">'+(p?esc(p.name):'')+'</div>';
-    h+='<div class="bid" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+cd.idt+'px">'+(p?('ID: '+esc(p.id)):'')+'</div>';
+  CARDS.forEach((cd,i)=>{ const p=ps[i];
+    h+='<div class="bprice" style="left:'+(cd.l+6)+'px;top:'+(cd.t+8)+'px">'+(p?('¥'+esc(p.price)+'/'+esc(p.unit||'件')):'')+'</div>';
+    h+='<div class="bpimg" style="left:'+cd.l+'px;top:'+(cd.t+34)+'px;width:'+cd.w+'px;height:'+(cd.h-40)+'px">'+(p?imgHTML(p):'')+'</div>';
+    h+='<div class="bname" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+(cd.t+cd.h+6)+'px">'+(p?esc(p.name):'')+'</div>';
+    h+='<div class="bid" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+(cd.t+cd.h+34)+'px">'+(p?('ID: '+esc(p.id)):'')+'</div>';
   });
   h+='<div class="bqr" style="left:398px;top:788px;width:80px;height:80px"><img src="qr.png" alt="QR"></div>';
   return h+'</div>';
