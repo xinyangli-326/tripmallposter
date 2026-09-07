@@ -63,13 +63,13 @@ button.gr{background:#5a8}
 
 /* ========== 蓝色海报模板 ========== */
 .bcard{width:540px;height:886px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('blue_bg.png') center/100% 100% no-repeat}
-.blogo{position:absolute;left:14px;top:12px;width:220px;height:50px;background:linear-gradient(#2f9de0,#2a66bb);border-radius:25px;display:flex;align-items:center;justify-content:center;padding:6px 10px;box-shadow:0 2px 6px rgba(0,0,0,.18);z-index:6}
-.blogo img{max-height:90%;max-width:92%;object-fit:contain}
-.bprice{position:absolute;background:#fff;border-radius:12px;padding:4px 12px;color:#1c6fbd;font-weight:800;font-size:16px;z-index:3;box-shadow:0 2px 5px rgba(0,0,0,.15)}
+.blogo{position:absolute;left:12px;top:10px;width:250px;height:54px;display:flex;align-items:center;justify-content:center;z-index:6;filter:drop-shadow(0 1px 2px rgba(0,0,0,.22))}
+.blogo img{width:100%;height:100%;object-fit:contain}
+.bprice{position:absolute;background:#fff;border-radius:11px;padding:3px 8px;color:#1c6fbd;font-weight:800;font-size:13px;z-index:3;box-shadow:0 2px 4px rgba(0,0,0,.12)}
 .bpimg{position:absolute;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;overflow:hidden}
 .bpimg img{width:100%;height:100%;object-fit:contain}
-.bname{position:absolute;text-align:center;color:#2b2b2b;font-weight:800;font-size:13px;line-height:1.25;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bid{position:absolute;text-align:center;color:#7a7a7a;font-size:10px;font-weight:600;z-index:2}
+.bname{position:absolute;text-align:center;color:#2b2b2b;font-weight:700;font-size:12px;line-height:1.2;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bid{position:absolute;text-align:center;color:#8a8a8a;font-size:9px;font-weight:600;z-index:2}
 .bqr{position:absolute;background:#fff;border-radius:8px;padding:5px;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
 .bqr img{width:100%;height:100%;object-fit:contain}
 
@@ -176,12 +176,12 @@ function blueCard(items){
   ];
   let h='<div class="bcard"><div class="blogo"><img src="whitelogo.png" alt="logo"></div>';
   CARDS.forEach((cd,i)=>{ const p=ps[i];
-    h+='<div class="bprice" style="left:'+(cd.l+6)+'px;top:'+(cd.t+8)+'px">'+(p?('¥'+esc(p.price)+'/'+esc(p.unit||'件')):'')+'</div>';
-    h+='<div class="bpimg" style="left:'+cd.l+'px;top:'+(cd.t+34)+'px;width:'+cd.w+'px;height:'+(cd.h-40)+'px">'+(p?imgHTML(p):'')+'</div>';
+    h+='<div class="bprice" style="left:'+(cd.l+5)+'px;top:'+(cd.t+5)+'px">'+(p?('¥'+esc(p.price)+'/'+esc(p.unit||'件')):'')+'</div>';
+    h+='<div class="bpimg" style="left:'+(cd.l+4)+'px;top:'+(cd.t+36)+'px;width:'+(cd.w-8)+'px;height:'+(cd.h-48)+'px">'+(p?imgHTML(p):'')+'</div>';
     h+='<div class="bname" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+(cd.t+cd.h+6)+'px">'+(p?esc(p.name):'')+'</div>';
-    h+='<div class="bid" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+(cd.t+cd.h+34)+'px">'+(p?('ID: '+esc(p.id)):'')+'</div>';
+    h+='<div class="bid" style="left:'+cd.l+'px;width:'+cd.w+'px;top:'+(cd.t+cd.h+33)+'px">'+(p?('ID: '+esc(p.id)):'')+'</div>';
   });
-  h+='<div class="bqr" style="left:398px;top:788px;width:80px;height:80px"><img src="qr.png" alt="QR"></div>';
+  h+='<div class="bqr" style="left:454px;top:812px;width:52px;height:52px"><img src="qr.png" alt="QR"></div>';
   return h+'</div>';
 }
 function card(items){ return tpl==='red' ? redCard(items) : (tpl==='blue' ? blueCard(items) : whiteCard(items)); }
