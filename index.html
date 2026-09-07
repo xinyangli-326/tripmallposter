@@ -67,6 +67,10 @@ button.gr{background:#5a8}
 .blogo img{max-height:92%;max-width:94%;object-fit:contain}
 .bpimg{position:absolute;background:transparent;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:10px;overflow:hidden}
 .bpimg img{width:100%;height:100%;object-fit:contain}
+.btitle{position:absolute;left:20px;top:74px;width:500px;background:rgba(255,255,255,.9);border-radius:22px;padding:12px 10px;text-align:center;font-size:38px;font-weight:900;color:#1f8a4c;line-height:1.14;box-shadow:0 3px 8px rgba(0,0,0,.16);z-index:6}
+.bsub{position:absolute;left:56px;top:300px;width:428px;background:rgba(255,214,0,.95);border-radius:14px;padding:8px 10px;text-align:center;color:#1c6fbd;font-weight:800;font-size:17px;line-height:1.3;box-shadow:0 3px 8px rgba(0,0,0,.15);z-index:6}
+.bsub small{display:block;font-size:13px;color:#2a7d4b;font-weight:700;margin-top:3px;letter-spacing:.5px}
+.bbottom{position:absolute;left:34px;bottom:20px;width:472px;background:rgba(255,255,255,.85);border-radius:12px;padding:9px 8px;text-align:center;color:#1c6fbd;font-weight:700;font-size:14px;line-height:1.55;z-index:6}
 </style>
 </head>
 <body>
@@ -83,8 +87,10 @@ button.gr{background:#5a8}
 67327</textarea>
 <label>页脚第二行（优惠话术）</label><input id="foot1" value="新客20元无门槛优惠券 叠加海量店铺优惠券">
 <label>页脚第三行（购买路径）</label><input id="foot2" value="电脑端：携程EBooking->商机中心->服务市场；APP端：携程EBooking->用品采购">
-<label>蓝色大标题</label><input id="bTitle" value="新学期好物清单">
-<label>底部活动时间</label><input id="bBottom" value="活动时间：2026.8.15 — 9.1">
+<label>蓝色大标题</label><input id="bTitle" value="携程服务市场热销推荐">
+<label>蓝色小标题</label><input id="bSub" value="携程服务市场的五大优势">
+<label>小标题优势项(逗号分隔)</label><input id="bItems" value="集采低价,房券换物,7天无理由退款,品质保证,免费开票">
+<label>底部文字</label><input id="bBottom" value="电脑端：携程EBooking→商旅中心→服务市场→搜索商品编码；APP端：携程EBooking→用品采购→搜索商品编码">
 <label>商品信息（可编辑价格/单位/标签）</label>
 <div class="edithint">标签用逗号分隔，如：经济实惠,客房标配</div>
 <div id="editArea"></div>
@@ -164,12 +170,16 @@ function redCard(items){
 }
 function blueCard(items){
   const ps=items.slice(0,4);
+  const bTitle=esc(document.getElementById('bTitle').value);
+  const bSub=esc(document.getElementById('bSub').value);
+  const bItems=esc(document.getElementById('bItems').value).split(/[,，]/).map(s=>s.trim()).filter(Boolean).join(' · ');
+  const bBottom=esc(document.getElementById('bBottom').value);
   const CELLS=[{l:78,t:475,w:186,h:160},{l:300,t:475,w:186,h:160},{l:78,t:785,w:186,h:150},{l:300,t:785,w:186,h:150}];
   let imgs='';
   for(let i=0;i<4;i++){ const c=CELLS[i]; const p=ps[i];
     imgs += '<div class="bpimg" style="left:'+c.l+'px;top:'+c.t+'px;width:'+c.w+'px;height:'+c.h+'px">'+(p?imgHTML(p):'')+'</div>';
   }
-  return '<div class="bcard"><div class="blogo"><img src="whitelogo.png" alt="logo"></div>'+imgs+'</div>';
+  return '<div class="bcard"><div class="blogo"><img src="whitelogo.png" alt="logo"></div><div class="btitle">'+bTitle+'</div><div class="bsub">'+bSub+(bItems?'<small>'+bItems+'</small>':'')+'</div><div class="bbottom">'+bBottom+'</div>'+imgs+'</div>';
 }
 function card(items){ return tpl==='red' ? redCard(items) : (tpl==='blue' ? blueCard(items) : whiteCard(items)); }
 async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
