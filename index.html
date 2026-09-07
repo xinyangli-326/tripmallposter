@@ -90,6 +90,19 @@ async function loadData(){ try{ DATA = await fetch('data/products.json?v=2').the
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function guessUnit(name){
+  const n=name||'';
+  const r=(re)=>re.test(n);
+  if(r(/箱|整箱|箱装|件\/箱|瓶\/箱|支\/箱|24瓶|12瓶|24听|12听/)) return '箱';
+  if(r(/矿泉水|饮用水|纯净水|山泉水|天然水|苏打水|气泡水/)) return '箱';
+  if(r(/洗发|洗手|沐浴|洗沐|洗衣液|洗洁|消毒液|洁厕|护发|护理液|漱口|清洁剂|酒精|精油|洗发水|洗手液|沐浴露/)) return '瓶';
+  if(r(/套装|六件套|五件套|四件套|洗漱|牙具|护理包|旅行套装|床品四件/)) return '套';
+  if(r(/茶包|袋泡茶|抽纸|卷纸|湿巾|面巾纸|擦手纸|纸巾/)) return '包';
+  if(r(/吹风机|电水壶|电视机|冰箱|空调|洗衣机|加湿器|热水器|咖啡机|茶饮机|打印机|投影仪|扫地机|电风扇|电暖器|挂烫机|体重秤|灭蚊器|熨斗/)) return '台';
+  if(r(/毛巾|浴巾|方巾|地巾|床单|被套|枕套|夏被|毛毯|浴袍|浴衣/)) return '条';
+  if(r(/床垫|保护垫|枕芯|被芯|枕头|拖鞋|咖啡杯|杯/)) return '件';
+  return '件';
+}
 function imgHTML(p){
   if(!p.image) return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:13px">【 商品图 '+esc(p.id)+' 暂无 】</div>';
   return '<img src="'+p.image+'" crossorigin="anonymous" onerror="this.parentNode.textContent=\'【 商品图 '+esc(p.id)+' 加载失败 】\';this.parentNode.style.cssText=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:13px\'">';
@@ -98,7 +111,7 @@ function buildEditors(ids){
   const area=document.getElementById('editArea'); if(!area) return;
   area.innerHTML=ids.map(id=>{
     const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
+    const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
     return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"></div>';
   }).join('');
   area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); gen(); }); });
@@ -110,7 +123,7 @@ async function gen(){
   const key=ids.join(',');
   if(key!==idsKey){ edits={}; idsKey=key; buildEditors(ids); }
   const items=ids.map(id=>{ const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    return {id, name:r.name||('商品'+id), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
+    return {id, name:r.name||('商品'+id), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
