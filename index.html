@@ -60,6 +60,13 @@ button.gr{background:#5a8}
 .rprod.big .rb-tags span{font-size:14px;padding:3px 12px;border-radius:9px}
 .rqr{position:absolute;left:453px;top:882px;width:56px;height:56px;background:#fff;border-radius:6px;padding:3px;box-sizing:border-box;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .rqr img{width:100%;height:100%;object-fit:contain}
+
+/* ========== 蓝色海报模板（字体/底图照搬，仅换商品图+logo） ========== */
+.bcard{width:540px;height:1168px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('blue_bg.png') center/100% 100% no-repeat}
+.blogo{position:absolute;left:22px;top:26px;width:236px;height:58px;background:linear-gradient(#3f86d8,#2a66bb);border-radius:29px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.16);padding:8px 12px;z-index:6}
+.blogo img{max-height:92%;max-width:94%;object-fit:contain}
+.bpimg{position:absolute;background:transparent;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:10px;overflow:hidden}
+.bpimg img{width:100%;height:100%;object-fit:contain}
 </style>
 </head>
 <body>
@@ -67,7 +74,7 @@ button.gr{background:#5a8}
 <div class="left"><h1>TripMALL 商品海报生成器</h1>
 <p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按所选模板出图。</p>
 <label>海报模板</label>
-<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button></div>
+<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-blue" onclick="setTpl('blue')">蓝色海报</button></div>
 <label>版式</label>
 <div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
 <textarea id="ids">6517
@@ -76,6 +83,8 @@ button.gr{background:#5a8}
 67327</textarea>
 <label>页脚第二行（优惠话术）</label><input id="foot1" value="新客20元无门槛优惠券 叠加海量店铺优惠券">
 <label>页脚第三行（购买路径）</label><input id="foot2" value="电脑端：携程EBooking->商机中心->服务市场；APP端：携程EBooking->用品采购">
+<label>蓝色大标题</label><input id="bTitle" value="新学期好物清单">
+<label>底部活动时间</label><input id="bBottom" value="活动时间：2026.8.15 — 9.1">
 <label>商品信息（可编辑价格/单位/标签）</label>
 <div class="edithint">标签用逗号分隔，如：经济实惠,客房标配</div>
 <div id="editArea"></div>
@@ -87,7 +96,7 @@ button.gr{background:#5a8}
 <script>
 let mode='grid', tpl='white', DATA={}, edits={}, idsKey='';
 async function loadData(){ try{ DATA = await fetch('data/products.json?v=2').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
-function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');gen();}
+function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-blue').classList.toggle('on',t==='blue');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function guessUnit(name){
@@ -153,7 +162,16 @@ function redCard(items){
   }
   return '<div class="rcard">'+cells+'<div class="rqr"><img src="qr.png" alt="QR"></div></div>';
 }
-function card(items){ return tpl==='red' ? redCard(items) : whiteCard(items); }
+function blueCard(items){
+  const ps=items.slice(0,4);
+  const CELLS=[{l:78,t:475,w:186,h:160},{l:300,t:475,w:186,h:160},{l:78,t:785,w:186,h:150},{l:300,t:785,w:186,h:150}];
+  let imgs='';
+  for(let i=0;i<4;i++){ const c=CELLS[i]; const p=ps[i];
+    imgs += '<div class="bpimg" style="left:'+c.l+'px;top:'+c.t+'px;width:'+c.w+'px;height:'+c.h+'px">'+(p?imgHTML(p):'')+'</div>';
+  }
+  return '<div class="bcard"><div class="blogo"><img src="whitelogo.png" alt="logo"></div>'+imgs+'</div>';
+}
+function card(items){ return tpl==='red' ? redCard(items) : (tpl==='blue' ? blueCard(items) : whiteCard(items)); }
 async function exportPng(){ if(!document.getElementById('cardBox').firstElementChild) await gen(); const el=document.getElementById('cardBox').firstElementChild; const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false}); const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click(); }
 loadData();
 </script>
