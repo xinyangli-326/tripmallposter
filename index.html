@@ -64,14 +64,14 @@ button.gr{background:#5a8}
 /* ========== 橙色促销模板 ========== */
 .ocard{width:540px;height:864px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('orange_bg.png') center/100% 100% no-repeat}
 .oprod{position:absolute;background:#fff;border-radius:10px;box-shadow:0 2px 7px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
-.oimg{flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:10px;overflow:hidden;padding:4px}
+.oimg{flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:9px;overflow:hidden;padding:3px}
 .oimg img{width:100%;height:100%;object-fit:contain}
-.oid{font-size:10px;color:#9a9a9a;margin:6px 12px 0}
-.oname{font-size:13px;font-weight:800;color:#222;margin:1px 12px 3px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oprice{font-size:10px;color:#e4393c;font-weight:600;margin:0 12px 3px}
-.oprice b{font-size:19px;font-weight:900}
-.otags{display:flex;flex-wrap:wrap;gap:3px;padding:0 12px 12px}
-.otags span{background:#fdecda;color:#c05a00;border:1px solid #f2c79a;border-radius:8px;padding:1px 6px;font-size:8px}
+.oid{font-size:8px;color:#9a9a9a;margin:4px 9px 0}
+.oname{font-size:12px;font-weight:800;color:#222;margin:1px 9px 2px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oprice{font-size:9px;color:#e4393c;font-weight:600;margin:0 9px 2px}
+.oprice b{font-size:15px;font-weight:900}
+.otags{display:flex;flex-wrap:wrap;gap:2px;padding:0 9px 9px}
+.otags span{background:#fdecda;color:#c05a00;border:1px solid #f2c79a;border-radius:7px;padding:1px 4px;font-size:7px}
 
 
 </style>
@@ -170,10 +170,10 @@ function redCard(items){
 function orangeCard(items){
   const ps=items.slice(0,4);
   const CELLS=[
-    {l:74,t:246,w:196,h:188},
-    {l:270,t:246,w:194,h:188},
-    {l:74,t:402,w:194,h:184},
-    {l:272,t:402,w:188,h:184}
+    {l:75,t:226,w:178,h:138},
+    {l:262,t:226,w:194,h:138},
+    {l:75,t:442,w:178,h:136},
+    {l:262,t:442,w:194,h:136}
   ];
   let h='<div class="ocard">';
   CELLS.forEach((cd,i)=>{ const p=ps[i];
