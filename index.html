@@ -62,7 +62,7 @@ button.gr{background:#5a8}
 .rqr img{width:100%;height:100%;object-fit:contain}
 
 /* ========== 橙色促销模板 ========== */
-.ocard{width:540px;height:864px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('orange_bg.png') center/100% 100% no-repeat}
+.ocard{width:540px;height:960px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('orange_bg.png') center/100% 100% no-repeat}
 .oprod{position:absolute;background:#fff;border-radius:10px;box-shadow:0 2px 7px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
 .oimg{flex:2;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;overflow:hidden;padding:5px}
 .oimg img{width:100%;height:100%;object-fit:contain}
@@ -180,14 +180,14 @@ function orangeCard(items){
     const inner = p
       ? '<div class="oimg">'+imgHTML(p)+'</div><div class="oid">商品ID: '+esc(p.id)+'</div><div class="oname">'+esc(p.name)+'</div><div class="oprice">¥<b>'+esc(p.price)+'</b> 元/'+esc(p.unit||'件')+'</div><div class="otags">'+(p.tags||[]).slice(0,4).map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>'
       : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:14px">请输入商品ID</div>';
-    return '<div class="ocard"><div class="oprod big" style="left:74px;top:360px;width:392px;height:424px">'+inner+'</div></div>';
+    return '<div class="ocard"><div class="oprod big" style="left:74px;top:398px;width:392px;height:472px">'+inner+'</div></div>';
   }
   const ps=items.slice(0,4);
   const CELLS=[
-    {l:74,t:352,w:192,h:224},
-    {l:270,t:352,w:192,h:224},
-    {l:74,t:582,w:192,h:224},
-    {l:270,t:582,w:192,h:224}
+    {l:74,t:398,w:192,h:236},
+    {l:270,t:398,w:192,h:236},
+    {l:74,t:638,w:192,h:236},
+    {l:270,t:638,w:192,h:236}
   ];
   let h='<div class="ocard">';
   CELLS.forEach((cd,i)=>{ const p=ps[i];
