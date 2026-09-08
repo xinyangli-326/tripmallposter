@@ -200,14 +200,15 @@ function orangeCard(items){
 }
 function card(items){ return tpl==='red' ? redCard(items) : (tpl==='orange' ? orangeCard(items) : whiteCard(items)); }
 async function exportPng(){
-  if(!document.getElementById('cardBox').firstElementChild) await gen();
-  const el=document.getElementById('cardBox').firstElementChild;
-  // 等背景图加载
-  await new Promise(res=>{ const m=getComputedStyle(el).backgroundImage.match(/url\("?([^")]+)"?\)/); if(!m){ res(); return; } const im=new Image(); im.onload=im.onerror=res; im.src=m[1]; });
-  // 等所有商品图加载
-  await Promise.all([...el.querySelectorAll('img')].map(i=> new Promise(r=>{ if(i.complete){ r(); } else { i.onload=r; i.onerror=r; } })));
-  const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false,imageTimeout:30000});
-  const a=document.createElement('a'); a.href=c.toDataURL(); a.download='product-card.png'; a.click();
+  try{
+    if(!document.getElementById('cardBox').firstElementChild) await gen();
+    const el=document.getElementById('cardBox').firstElementChild;
+    await new Promise(res=>{ const m=getComputedStyle(el).backgroundImage.match(/url\("?([^")]+)"?\)/); if(!m){ res(); return; } const im=new Image(); im.onload=im.onerror=res; im.src=m[1]; });
+    await Promise.all([...el.querySelectorAll('img')].map(i=> new Promise(r=>{ if(i.complete){ r(); } else { i.onload=r; i.onerror=r; } })));
+    const c=await html2canvas(el,{scale:1.5,useCORS:true,allowTaint:false,imageTimeout:30000,backgroundColor:'#ffffff'});
+    const url=c.toDataURL('image/png');
+    const a=document.createElement('a'); a.href=url; a.download='product-card.png'; a.click();
+  }catch(e){ alert('导出失败：'+e.message+'\n请按F12看控制台报错(通常为某张图片跨域/加载失败)'); }
 }
 loadData();
 </script>
