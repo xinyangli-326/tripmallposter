@@ -88,7 +88,7 @@ button.gr{background:#5a8}
 <div id="cardBox" hidden></div>
 <script>
 let mode='grid', tpl='white', DATA={}, edits={}, idsKey='';
-async function loadData(){ try{ DATA = await fetch('data/products.json?v=3').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
+async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
