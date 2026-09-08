@@ -200,15 +200,20 @@ function orangeCard(items){
 }
 function card(items){ return tpl==='red' ? redCard(items) : (tpl==='orange' ? orangeCard(items) : whiteCard(items)); }
 async function exportPng(){
+  if(!document.getElementById('cardBox').firstElementChild) await gen();
+  const box=document.getElementById('cardBox');
+  const el=box.firstElementChild;
+  const prev=box.hidden; box.hidden=false; // 显示以获取真实尺寸
   try{
-    if(!document.getElementById('cardBox').firstElementChild) await gen();
-    const el=document.getElementById('cardBox').firstElementChild;
-    await Promise.all([...el.querySelectorAll('img')].map(i=> new Promise(r=>{ if(i.complete){ r(); } else { i.onload=r; i.onerror=r; } })));
+    await new Promise(r=>setTimeout(r,60));
     const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false,imageTimeout:30000});
     const blob=await new Promise(res=>c.toBlob(res,'image/png'));
-    if(blob && blob.size>500){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='product-card.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000); return; }
-    const d=c.toDataURL('image/png'); const a=document.createElement('a'); a.href=d; a.download='product-card.png'; a.click();
-  }catch(e){ alert('导出失败：'+e.message); }
+    const a=document.createElement('a');
+    if(blob){ a.href=URL.createObjectURL(blob); setTimeout(()=>URL.revokeObjectURL(a.href),3000); }
+    else { a.href=c.toDataURL('image/png'); }
+    a.download='product-card.png'; a.click();
+  } catch(e){ alert('导出失败：'+e.message); }
+  finally{ box.hidden=prev; }
 }
 loadData();
 </script>
