@@ -21,6 +21,11 @@ button.gr{background:#5a8}
 .edit-row .eid{font-weight:700;font-size:12px;color:#666;min-width:50px}
 .edit-row input{flex:1;min-width:70px;padding:5px 7px;border:1px solid #ddd;border-radius:5px;font-size:12px}
 .edithint{font-size:11px;color:#999;margin:4px 0 2px}
+.hist-row{display:flex;gap:6px;align-items:center;font-size:12px;margin:4px 0;flex-wrap:wrap;border-bottom:1px dashed #eee;padding-bottom:3px}
+.hist-row .hf{color:#888;min-width:36px}
+.hist-row .hv{color:#c05a00;font-weight:700;flex:1}
+.hist-row .ht{color:#aaa;font-size:10px}
+.hist-row button{margin:0;padding:2px 8px;font-size:12px;background:#5a8;color:#fff;border:0;border-radius:5px;cursor:pointer}
 
 /* ========== 白底模板 ========== */
 .mcard{width:740px;background:#fff;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
@@ -100,6 +105,8 @@ button.gr{background:#5a8}
 <label>商品信息（可编辑价格/单位/标签）</label>
 <div class="edithint">标签用逗号分隔，如：经济实惠,客房标配</div>
 <div id="editArea"></div>
+<button style="margin-top:6px" onclick="renderHistory()">历史编辑记录</button>
+<div id="histArea"></div>
 <button onclick="gen()">生成</button><button class="gr" onclick="exportPng()">导出 PNG</button>
 </div>
 <div class="right"><div id="preview"></div></div>
@@ -107,6 +114,11 @@ button.gr{background:#5a8}
 <div id="cardBox" hidden></div>
 <script>
 let mode='grid', tpl='white', DATA={}, edits={}, idsKey='';
+try{ edits=JSON.parse(localStorage.getItem('tme_edits')||'{}'); }catch(e){ edits={}; }
+function saveEdits(){ try{ localStorage.setItem('tme_edits', JSON.stringify(edits)); }catch(e){} }
+function addHist(id,f,v){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); h.unshift({id,f,v,t:Date.now()}); localStorage.setItem('tme_history', JSON.stringify(h.slice(0,60))); renderHistory(); }catch(e){} }
+function renderHistory(){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); const el=document.getElementById('histArea'); if(!el) return; el.innerHTML=h.map((x,i)=>'<div class="hist-row"><span>'+esc(x.id)+'</span><span class="hf">'+esc(x.f)+'</span><span class="hv">'+esc(x.v)+'</span><span class="ht">'+new Date(x.t).toLocaleTimeString()+'</span><button onclick="applyHist('+i+')">应用</button></div>').join('')||'<div class="edithint">暂无编辑记录</div>'; }catch(e){ const el=document.getElementById('histArea'); if(el) el.innerHTML=''; } }
+function applyHist(i){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); const x=h[i]; if(!x) return; edits[x.id]=edits[x.id]||{}; if(x.f==='price') edits[x.id].price=x.v; else if(x.f==='unit') edits[x.id].unit=x.v; else edits[x.id].tags=String(x.v).split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }catch(e){} }
 async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-orange').classList.toggle('on',t==='orange');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
@@ -135,14 +147,14 @@ function buildEditors(ids){
     const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
     return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"></div>';
   }).join('');
-  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); gen(); }); });
+  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); addHist(id,f,inp.value); gen(); }); });
 }
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
   const area=document.getElementById('editArea');
   if(!ids.length){ if(area) area.innerHTML=''; return; }
   const key=ids.join(',');
-  if(key!==idsKey){ edits={}; idsKey=key; buildEditors(ids); }
+  if(key!==idsKey){ idsKey=key; buildEditors(ids); }
   const items=ids.map(id=>{ const r=DATA[String(id)]||{}; const e=edits[id]||{};
     return {id, name:r.name||('商品'+id), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
