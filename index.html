@@ -20,6 +20,7 @@ button.gr{background:#5a8}
 .edit-row{display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap}
 .edit-row .eid{font-weight:700;font-size:12px;color:#666;min-width:50px}
 .edit-row input{flex:1;min-width:70px;padding:5px 7px;border:1px solid #ddd;border-radius:5px;font-size:12px}
+.edit-row input.en{flex:2.2;min-width:130px}
 .edithint{font-size:11px;color:#999;margin:4px 0 2px}
 .hist-row{display:flex;gap:6px;align-items:center;font-size:12px;margin:4px 0;flex-wrap:wrap;border-bottom:1px dashed #eee;padding-bottom:3px}
 .hist-row .hf{color:#888;min-width:36px}
@@ -116,9 +117,10 @@ button.gr{background:#5a8}
 let mode='grid', tpl='white', DATA={}, edits={}, idsKey='';
 try{ edits=JSON.parse(localStorage.getItem('tme_edits')||'{}'); }catch(e){ edits={}; }
 function saveEdits(){ try{ localStorage.setItem('tme_edits', JSON.stringify(edits)); }catch(e){} }
-function addHist(id,f,v){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); h.unshift({id,f,v,t:Date.now()}); localStorage.setItem('tme_history', JSON.stringify(h.slice(0,60))); renderHistory(); }catch(e){} }
-function renderHistory(){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); const el=document.getElementById('histArea'); if(!el) return; el.innerHTML=h.map((x,i)=>'<div class="hist-row"><span>'+esc(x.id)+'</span><span class="hf">'+esc(x.f)+'</span><span class="hv">'+esc(x.v)+'</span><span class="ht">'+new Date(x.t).toLocaleTimeString()+'</span><button onclick="applyHist('+i+')">应用</button></div>').join('')||'<div class="edithint">暂无编辑记录</div>'; }catch(e){ const el=document.getElementById('histArea'); if(el) el.innerHTML=''; } }
-function applyHist(i){ try{ const h=JSON.parse(localStorage.getItem('tme_history')||'[]'); const x=h[i]; if(!x) return; edits[x.id]=edits[x.id]||{}; if(x.f==='price') edits[x.id].price=x.v; else if(x.f==='unit') edits[x.id].unit=x.v; else edits[x.id].tags=String(x.v).split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }catch(e){} }
+function saveSnap(){ try{ const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean); const snap={t:Date.now(), ids, edits:JSON.parse(JSON.stringify(edits))}; const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.unshift(snap); localStorage.setItem('tme_saved', JSON.stringify(s.slice(0,30))); renderHistory(); alert('已保存本轮编辑'); }catch(e){} }
+function renderHistory(){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const el=document.getElementById('histArea'); if(!el) return; if(!s.length){ el.innerHTML='<div class="edithint">暂无保存记录。点「保存本轮编辑」即可保存。</div>'; return; } el.innerHTML=s.map((x,i)=>'<div class="hist-row"><span class="ht">'+new Date(x.t).toLocaleString()+'</span><span class="hv">'+esc(x.ids.join(','))+'</span><button onclick="applySnap('+i+')">应用</button><button onclick="delSnap('+i+')" style="background:#c00">删除</button></div>').join(''); }catch(e){ const el=document.getElementById('histArea'); if(el) el.innerHTML=''; } }
+function applySnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const x=s[i]; if(!x) return; edits=JSON.parse(JSON.stringify(x.edits)); saveEdits(); document.getElementById('ids').value=x.ids.join('\n'); idsKey=''; gen(); }catch(e){} }
+function delSnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.splice(i,1); localStorage.setItem('tme_saved', JSON.stringify(s)); renderHistory(); }catch(e){} }
 async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-orange').classList.toggle('on',t==='orange');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
@@ -144,10 +146,10 @@ function buildEditors(ids){
   const area=document.getElementById('editArea'); if(!area) return;
   area.innerHTML=ids.map(id=>{
     const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
-    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"></div>';
+    const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
+    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"></div>';
   }).join('');
-  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); addHist(id,f,inp.value); gen(); }); });
+  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else if(f==='name')edits[id].name=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }); });
 }
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
@@ -156,7 +158,7 @@ async function gen(){
   const key=ids.join(',');
   if(key!==idsKey){ idsKey=key; buildEditors(ids); }
   const items=ids.map(id=>{ const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    return {id, name:r.name||('商品'+id), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
+    return {id, name:(e.name!=null?e.name:(r.name||('商品'+id))), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
