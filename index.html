@@ -64,14 +64,21 @@ button.gr{background:#5a8}
 /* ========== 橙色促销模板 ========== */
 .ocard{width:540px;height:864px;margin:0 auto;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('orange_bg.png') center/100% 100% no-repeat}
 .oprod{position:absolute;background:#fff;border-radius:10px;box-shadow:0 2px 7px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
-.oimg{flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;overflow:hidden;padding:10px}
+.oimg{flex:2;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;overflow:hidden;padding:6px}
 .oimg img{width:100%;height:100%;object-fit:contain}
-.oid{font-size:11px;color:#9a9a9a;margin:8px 14px 0}
-.oname{font-size:15px;font-weight:800;color:#222;margin:1px 14px 5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oprice{font-size:11px;color:#e4393c;font-weight:600;margin:0 14px 5px}
-.oprice b{font-size:21px;font-weight:900}
-.otags{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 16px}
-.otags span{background:#fdecda;color:#c05a00;border:1px solid #f2c79a;border-radius:11px;padding:3px 10px;font-size:10px}
+.oid{font-size:10px;color:#9a9a9a;margin:5px 12px 0}
+.oname{font-size:13px;font-weight:800;color:#222;margin:1px 12px 3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oprice{font-size:9px;color:#e4393c;font-weight:600;margin:0 12px 3px}
+.oprice b{font-size:17px;font-weight:900}
+.otags{display:flex;flex-wrap:wrap;gap:3px;padding:0 12px 12px}
+.otags span{background:#fdecda;color:#c05a00;border:1px solid #f2c79a;border-radius:9px;padding:2px 7px;font-size:8px}
+.oprod.big .oimg{flex:1}
+.oprod.big .oid{font-size:13px;margin:12px 22px 0}
+.oprod.big .oname{font-size:22px;margin:2px 22px 8px}
+.oprod.big .oprice{font-size:13px;margin:0 22px 8px}
+.oprod.big .oprice b{font-size:32px}
+.oprod.big .otags{gap:6px;padding:0 22px 22px}
+.oprod.big .otags span{font-size:12px;padding:4px 14px}
 
 
 </style>
@@ -168,6 +175,13 @@ function redCard(items){
   return '<div class="rcard">'+cells+'<div class="rqr"><img src="qr.png" alt="QR"></div></div>';
 }
 function orangeCard(items){
+  if(mode==='single'){
+    const p=items[0];
+    const inner = p
+      ? '<div class="oimg">'+imgHTML(p)+'</div><div class="oid">商品ID: '+esc(p.id)+'</div><div class="oname">'+esc(p.name)+'</div><div class="oprice">¥<b>'+esc(p.price)+'</b> 元/'+esc(p.unit||'件')+'</div><div class="otags">'+(p.tags||[]).slice(0,4).map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>'
+      : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:14px">请输入商品ID</div>';
+    return '<div class="ocard"><div class="oprod big" style="left:74px;top:360px;width:392px;height:424px">'+inner+'</div></div>';
+  }
   const ps=items.slice(0,4);
   const CELLS=[
     {l:75,t:360,w:189,h:207},
