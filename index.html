@@ -205,9 +205,10 @@ async function exportPng(){
     const el=document.getElementById('cardBox').firstElementChild;
     await new Promise(res=>{ const m=getComputedStyle(el).backgroundImage.match(/url\("?([^")]+)"?\)/); if(!m){ res(); return; } const im=new Image(); im.onload=im.onerror=res; im.src=m[1]; });
     await Promise.all([...el.querySelectorAll('img')].map(i=> new Promise(r=>{ if(i.complete){ r(); } else { i.onload=r; i.onerror=r; } })));
-    const c=await html2canvas(el,{scale:1.5,useCORS:true,allowTaint:false,imageTimeout:30000,backgroundColor:'#ffffff'});
-    const url=c.toDataURL('image/png');
-    const a=document.createElement('a'); a.href=url; a.download='product-card.png'; a.click();
+    const c=await html2canvas(el,{scale:2,useCORS:true,allowTaint:false,imageTimeout:30000,backgroundColor:'#ffffff'});
+    const blob=await new Promise(res=>c.toBlob(res,'image/png'));
+    if(!blob){ alert('导出失败：画布为空'); return; }
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='product-card.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000);
   }catch(e){ alert('导出失败：'+e.message+'\n请按F12看控制台报错(通常为某张图片跨域/加载失败)'); }
 }
 loadData();
