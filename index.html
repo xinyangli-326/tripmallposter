@@ -88,22 +88,22 @@ button.gr{background:#5a8}
 
 
 /* ========== 金色推荐模板（参考图底图 + 4 个动态商品卡） ========== */
-.gcard{width:736px;height:1408px;margin:0 auto;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('gold_bg.png') center/100% 100% no-repeat}
+.gcard{width:707px;height:1363px;margin:0 auto;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('gold_bg.png') center/100% 100% no-repeat}
 .gprod{position:absolute;background:#fff;border:1px solid #bfb7ac;border-radius:6px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column}
-.gimg{height:288px;flex:0 0 288px;padding:5px 5px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #d5cec4;overflow:hidden}
+.gimg{height:264px;flex:0 0 264px;padding:5px 5px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #d5cec4;overflow:hidden}
 .gimg img{max-width:100%;max-height:100%;object-fit:contain}
-.gbody{flex:1;min-height:0;padding:12px 11px 10px;box-sizing:border-box;display:flex;flex-direction:column}
+.gbody{flex:1;min-height:0;padding:10px 10px 13px;box-sizing:border-box;display:flex;flex-direction:column}
 .gid{font-size:10px;color:#9a9a9a;line-height:1;flex:0 0 auto}
-.gname{font-size:16px;font-weight:700;color:#3d3833;margin-top:5px;line-height:1.12;flex:1 1 auto;min-height:0;overflow:hidden}
+.gname{font-size:15px;font-weight:700;color:#3d3833;margin-top:3px;line-height:1.12;flex:1 1 auto;min-height:0;overflow:hidden}
 .gprice{display:flex;align-items:baseline;line-height:1;color:#e4393c;flex:0 0 auto}
-.gprice .gy{font-size:25px;font-weight:600;letter-spacing:-1px}
-.gprice b{font-size:25px;font-weight:800;letter-spacing:-0.5px}
-.gprice .gu{font-size:12px;font-weight:600;margin-left:2px}
-.gtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;flex:0 0 auto}
-.gtags span{background:#fde6d9;color:#ef9143;border-radius:4px;padding:2px 8px;font-size:11px;line-height:1.2}
-.gpanel{position:absolute;left:598px;top:1006px;width:138px;height:182px}
+.gprice .gy{font-size:22px;font-weight:600;letter-spacing:-1px}
+.gprice b{font-size:23px;font-weight:800;letter-spacing:-0.5px}
+.gprice .gu{font-size:11.5px;font-weight:600;margin-left:2px}
+.gtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;flex:0 0 auto}
+.gtags span{background:#fde6d9;color:#ef9143;border-radius:4px;padding:2px 7px;font-size:10.5px;line-height:1.2}
+.gpanel{position:absolute;left:561px;top:401px;width:116px;height:149px}
 .gpanel img{width:100%;height:100%;display:block}
-.gqr{position:absolute;left:617px;top:1076px;width:97px;height:97px}
+.gqr{position:absolute;left:580px;top:461px;width:75px;height:75px}
 .gqr img{width:100%;height:100%;object-fit:contain;display:block}
 .gsingle .gimg{height:auto;flex:1 1 auto;padding:10px 10px 0}
 .gsingle .gbody{flex:0 0 auto;padding:20px 22px 22px}
@@ -256,10 +256,10 @@ function goldCard(items){
   if(mode==='single'){
     const p=items[0];
     const inner = p ? goldBody(p,true) : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:14px">请输入商品ID</div>';
-    return '<div class="gcard"><div class="gprod gsingle" style="left:63px;top:389px;width:616px;height:829px">'+inner+'</div><div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
+    return '<div class="gcard"><div class="gprod gsingle" style="left:75px;top:448px;width:557px;height:758px">'+inner+'</div><div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
   }
   const ps=items.slice(0,4);
-  const CELLS=[{l:63,t:389,w:300,h:407},{l:379,t:389,w:300,h:407},{l:63,t:811,w:300,h:408},{l:379,t:811,w:300,h:408}];
+  const CELLS=[{l:75,t:448,w:273,h:374},{l:359,t:448,w:273,h:374},{l:75,t:834,w:273,h:373},{l:359,t:834,w:273,h:373}];
   let h='<div class="gcard">';
   CELLS.forEach((c,i)=>{
     const p=ps[i];
