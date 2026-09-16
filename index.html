@@ -87,6 +87,36 @@ button.gr{background:#5a8}
 .oprod.big .otags span{font-size:12px;padding:4px 14px}
 
 
+/* ========== 金色推荐模板（参考图底图 + 4 个动态商品卡） ========== */
+.gcard{width:736px;height:1408px;margin:0 auto;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 3px 16px rgba(0,0,0,.3);background:url('gold_bg.png') center/100% 100% no-repeat}
+.gprod{position:absolute;background:#fff;border:1px solid #bfb7ac;border-radius:6px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column}
+.gimg{height:288px;flex:0 0 288px;padding:5px 5px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #d5cec4;overflow:hidden}
+.gimg img{max-width:100%;max-height:100%;object-fit:contain}
+.gbody{flex:1;min-height:0;padding:12px 11px 10px;box-sizing:border-box;display:flex;flex-direction:column}
+.gid{font-size:10px;color:#9a9a9a;line-height:1;flex:0 0 auto}
+.gname{font-size:16px;font-weight:700;color:#3d3833;margin-top:5px;line-height:1.12;flex:1 1 auto;min-height:0;overflow:hidden}
+.gprice{display:flex;align-items:baseline;line-height:1;color:#e4393c;flex:0 0 auto}
+.gprice .gy{font-size:25px;font-weight:600;letter-spacing:-1px}
+.gprice b{font-size:25px;font-weight:800;letter-spacing:-0.5px}
+.gprice .gu{font-size:12px;font-weight:600;margin-left:2px}
+.gtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;flex:0 0 auto}
+.gtags span{background:#fde6d9;color:#ef9143;border-radius:4px;padding:2px 8px;font-size:11px;line-height:1.2}
+.gpanel{position:absolute;left:598px;top:1006px;width:138px;height:182px}
+.gpanel img{width:100%;height:100%;display:block}
+.gqr{position:absolute;left:617px;top:1076px;width:97px;height:97px}
+.gqr img{width:100%;height:100%;object-fit:contain;display:block}
+.gsingle .gimg{height:auto;flex:1 1 auto;padding:10px 10px 0}
+.gsingle .gbody{flex:0 0 auto;padding:20px 22px 22px}
+.gsingle .gid{font-size:14px}
+.gsingle .gname{font-size:25px;margin-top:8px;line-height:1.18;flex:0 0 auto;max-height:74px}
+.gsingle .gprice{margin-top:14px}
+.gsingle .gprice .gy{font-size:34px}
+.gsingle .gprice b{font-size:44px}
+.gsingle .gprice .gu{font-size:20px}
+.gsingle .gtags{margin-top:14px;gap:8px}
+.gsingle .gtags span{font-size:15px;padding:5px 13px}
+
+
 </style>
 </head>
 <body>
@@ -94,7 +124,7 @@ button.gr{background:#5a8}
 <div class="left"><h1>TripMALL 商品海报生成器</h1>
 <p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按所选模板出图。</p>
 <label>海报模板</label>
-<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-orange" onclick="setTpl('orange')">橙色促销</button></div>
+<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-orange" onclick="setTpl('orange')">橙色促销</button><button id="tb-gold" onclick="setTpl('gold')">金色推荐</button></div>
 <label>版式</label>
 <div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
 <textarea id="ids">6517
@@ -122,7 +152,7 @@ function renderHistory(){ try{ const s=JSON.parse(localStorage.getItem('tme_save
 function applySnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const x=s[i]; if(!x) return; edits=JSON.parse(JSON.stringify(x.edits)); saveEdits(); document.getElementById('ids').value=x.ids.join('\n'); idsKey=''; gen(); }catch(e){} }
 function delSnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.splice(i,1); localStorage.setItem('tme_saved', JSON.stringify(s)); renderHistory(); }catch(e){} }
 async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
-function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-orange').classList.toggle('on',t==='orange');gen();}
+function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-orange').classList.toggle('on',t==='orange');document.getElementById('tb-gold').classList.toggle('on',t==='gold');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function guessUnit(name){
@@ -212,7 +242,33 @@ function orangeCard(items){
   });
   return h+'</div>';
 }
-function card(items){ return tpl==='red' ? redCard(items) : (tpl==='orange' ? orangeCard(items) : whiteCard(items)); }
+function goldBody(p,big){
+  const idtxt = (big?'商品ID: ':'ID: ')+esc(p.id);
+  return '<div class="gimg">'+imgHTML(p)+'</div>'
+    +'<div class="gbody">'
+    +'<div class="gid">'+idtxt+'</div>'
+    +'<div class="gname">'+esc(p.name)+'</div>'
+    +'<div class="gprice"><span class="gy">¥</span><b>'+esc(p.price)+'</b><span class="gu">元/'+esc(p.unit||'件')+'</span></div>'
+    +'<div class="gtags">'+(p.tags||[]).slice(0,big?5:3).map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>'
+    +'</div>';
+}
+function goldCard(items){
+  if(mode==='single'){
+    const p=items[0];
+    const inner = p ? goldBody(p,true) : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:14px">请输入商品ID</div>';
+    return '<div class="gcard"><div class="gprod gsingle" style="left:63px;top:389px;width:616px;height:829px">'+inner+'</div><div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
+  }
+  const ps=items.slice(0,4);
+  const CELLS=[{l:63,t:389,w:300,h:407},{l:379,t:389,w:300,h:407},{l:63,t:811,w:300,h:408},{l:379,t:811,w:300,h:408}];
+  let h='<div class="gcard">';
+  CELLS.forEach((c,i)=>{
+    const p=ps[i];
+    const inner = p ? goldBody(p,false) : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#ddd;font-size:12px">——</div>';
+    h+='<div class="gprod" style="left:'+c.l+'px;top:'+c.t+'px;width:'+c.w+'px;height:'+c.h+'px">'+inner+'</div>';
+  });
+  return h+'<div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
+}
+function card(items){ return tpl==='red' ? redCard(items) : (tpl==='orange' ? orangeCard(items) : (tpl==='gold' ? goldCard(items) : whiteCard(items))); }
 async function exportPng(){
   if(!document.getElementById('cardBox').firstElementChild) await gen();
   const box=document.getElementById('cardBox');
