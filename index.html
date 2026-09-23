@@ -172,6 +172,36 @@ async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').the
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-gold').classList.toggle('on',t==='gold');document.getElementById('tb-table').classList.toggle('on',t==='table');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+var UNIT_WORDS=['件','个','只','支','条','套','瓶','包','袋','盒','箱','桶','张','台','把','块','片','组','份','卷','米','公斤','对','副','听','罐','床','捆','扎','双','顶','扇','盏','匹','部','艘','辆','间','位','次','天','平方','平方米','码','磅'];
+function normUnit(v){
+  var s=String(v==null?'':v).trim();
+  if(!s) return '';
+  if(UNIT_WORDS.indexOf(s)>=0) return s;
+  var m1=s.match(/\/([\u4e00-\u9fa5]{1,2})$/);           // 1000/箱
+  if(m1&&UNIT_WORDS.indexOf(m1[1])>=0) return m1[1];
+  var m2=s.match(/^([\u4e00-\u9fa5]{1,2})\//);            // 个/箱
+  if(m2&&UNIT_WORDS.indexOf(m2[1])>=0) return m2[1];
+  var m3=s.match(/^([\u4e00-\u9fa5]{1,2})\s*装?$/);       // 箱装 / 桶装
+  if(m3&&UNIT_WORDS.indexOf(m3[1])>=0) return m3[1];
+  return '';
+}
+function scrapedUnit(id){
+  var sp=SPECS[String(id)];
+  if(!sp||!sp.p||!sp.p.length) return '';
+  for(var i=0;i<sp.p.length;i++){
+    if(/箱规|计量单位|规格单位|销售单位|单位/.test(sp.p[i][0])){
+      var u=normUnit(sp.p[i][1]);
+      if(u) return u;
+    }
+  }
+  return '';
+}
+function unitOf(id, name, e){
+  if(e && e.unit!=null && e.unit!=='') return e.unit;      // 1) 手动编辑优先
+  var su=scrapedUnit(id);
+  if(su) return su;                                        // 2) 详情页抓到的单位
+  return guessUnit(name)||'件';                            // 3) 名称关键词推断
+}
 function guessUnit(name){
   const n=name||'';
   const r=(re)=>re.test(n);
@@ -182,7 +212,11 @@ function guessUnit(name){
   if(r(/茶包|袋泡茶|抽纸|卷纸|湿巾|面巾纸|擦手纸|纸巾/)) return '包';
   if(r(/吹风机|电水壶|电视机|冰箱|空调|洗衣机|加湿器|热水器|咖啡机|茶饮机|打印机|投影仪|扫地机|电风扇|电暖器|挂烫机|体重秤|灭蚊器|熨斗/)) return '台';
   if(r(/毛巾|浴巾|方巾|地巾|床单|被套|枕套|夏被|毛毯|浴袍|浴衣/)) return '条';
-  if(r(/床垫|保护垫|枕芯|被芯|枕头|拖鞋|咖啡杯|杯/)) return '件';
+  if(r(/床垫|床褥/)) return '张';
+  if(r(/拖鞋|凉拖|布拖/)) return '双';
+  if(r(/香皂|肥皂/)) return '块';
+  if(r(/卷纸|空心卷纸|有芯卷纸/)) return '卷';
+  if(r(/枕芯|被芯|枕头|抱枕|保护垫|咖啡杯|杯|壶|锅|碗|碟|勺|筷|垃圾桶|收纳|托盘|衣架/)) return '个';
   return '件';
 }
 function imgHTML(p){
@@ -193,7 +227,7 @@ function buildEditors(ids){
   const area=document.getElementById('editArea'); if(!area) return;
   area.innerHTML=ids.map(id=>{
     const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[])); const cat=(e.cat!=null?e.cat:'');
+    const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=unitOf(id, r.name, e); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[])); const cat=(e.cat!=null?e.cat:'');
     return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"><input class="ec" placeholder="品名(表格用，留空=自动)" value="'+esc(cat)+'" data-id="'+esc(id)+'" data-f="cat"></div>';
   }).join('');
   area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else if(f==='name')edits[id].name=inp.value; else if(f==='cat')edits[id].cat=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }); });
@@ -205,7 +239,7 @@ async function gen(){
   const key=ids.join(',');
   if(key!==idsKey){ idsKey=key; buildEditors(ids); }
   const items=ids.map(id=>{ const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    return {id, name:(e.name!=null?e.name:(r.name||('商品'+id))), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
+    return {id, name:(e.name!=null?e.name:(r.name||('商品'+id))), price:(e.price!=null?e.price:(r.price||'')), unit:unitOf(id, r.name, e), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
   if(WM){ const el=box.firstElementChild; if(el&&!el.querySelector('.wm')){
     const prev=box.hidden; box.hidden=false;
