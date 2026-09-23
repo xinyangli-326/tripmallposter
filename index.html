@@ -97,6 +97,22 @@ button.gr{background:#5a8}
 .gsingle .gtags span{font-size:15px;padding:5px 13px}
 
 
+/* ========== 表格模式（品名/图片/规格/产品标准/价格，行数不限） ========== */
+.tcard{width:1180px;margin:0 auto;background:#fff;padding:16px;box-sizing:border-box;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.ttable{width:100%;border-collapse:collapse;table-layout:fixed;font-family:"Microsoft YaHei",sans-serif}
+.ttable th,.ttable td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
+.ttable th{font-size:20px;font-weight:800;color:#111;text-align:center;height:54px}
+.ttable td{font-size:13px;color:#222}
+.tcat{font-size:18px;font-weight:800;text-align:center;line-height:1.35}
+.timg{text-align:center;padding:6px}
+.timg img{max-width:150px;max-height:120px;object-fit:contain;display:block;margin:0 auto}
+.tspec{font-size:14px;font-weight:700;line-height:1.45}
+.tstd{font-size:13px;line-height:1.7;text-align:justify}
+.tstd i{font-style:normal;margin-right:6px}
+.tprice{text-align:center;color:#e4393c;font-weight:800;font-size:19px;white-space:nowrap}
+.ttip{font-size:12px;color:#999;text-align:center;padding:6px 0 0}
+
+
 </style>
 </head>
 <body>
@@ -104,7 +120,7 @@ button.gr{background:#5a8}
 <div class="left"><h1>TripMALL 商品海报生成器</h1>
 <p class="hint" id="hint">每行一个商品ID（空格/换行分隔）。从后台商品库取名称/价格/主图/多标签，按所选模板出图。</p>
 <label>海报模板</label>
-<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-gold" onclick="setTpl('gold')">金色推荐</button></div>
+<div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-gold" onclick="setTpl('gold')">金色推荐</button><button id="tb-table" onclick="setTpl('table')">表格模式</button></div>
 <label>版式</label>
 <div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
 <textarea id="ids">6517
@@ -124,15 +140,18 @@ button.gr{background:#5a8}
 </div>
 <div id="cardBox" hidden></div>
 <script>
-let mode='grid', tpl='white', DATA={}, edits={}, idsKey='';
+let mode='grid', tpl='white', DATA={}, SPECS={}, edits={}, idsKey='';
 try{ edits=JSON.parse(localStorage.getItem('tme_edits')||'{}'); }catch(e){ edits={}; }
 function saveEdits(){ try{ localStorage.setItem('tme_edits', JSON.stringify(edits)); }catch(e){} }
 function saveSnap(){ try{ const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean); const snap={t:Date.now(), ids, edits:JSON.parse(JSON.stringify(edits))}; const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.unshift(snap); localStorage.setItem('tme_saved', JSON.stringify(s.slice(0,30))); renderHistory(); alert('已保存本轮编辑'); }catch(e){} }
 function renderHistory(){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const el=document.getElementById('histArea'); if(!el) return; if(!s.length){ el.innerHTML='<div class="edithint">暂无保存记录。点「保存本轮编辑」即可保存。</div>'; return; } el.innerHTML=s.map((x,i)=>'<div class="hist-row"><span class="ht">'+new Date(x.t).toLocaleString()+'</span><span class="hv">'+esc(x.ids.join(','))+'</span><button onclick="applySnap('+i+')">应用</button><button onclick="delSnap('+i+')" style="background:#c00">删除</button></div>').join(''); }catch(e){ const el=document.getElementById('histArea'); if(el) el.innerHTML=''; } }
 function applySnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const x=s[i]; if(!x) return; edits=JSON.parse(JSON.stringify(x.edits)); saveEdits(); document.getElementById('ids').value=x.ids.join('\n'); idsKey=''; gen(); }catch(e){} }
 function delSnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.splice(i,1); localStorage.setItem('tme_saved', JSON.stringify(s)); renderHistory(); }catch(e){} }
-async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; } const n=Object.keys(DATA).length; document.getElementById('hint').innerText = '已加载商品 '+n+' 个。每行填一个商品ID。'; gen(); }
-function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-gold').classList.toggle('on',t==='gold');gen();}
+async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; }
+  try{ SPECS = await fetch('data/specs.json?v=1').then(r=>r.json()); }catch(e){ SPECS={}; }
+  const n=Object.keys(DATA).length, m=Object.keys(SPECS).length;
+  document.getElementById('hint').innerText = '已加载商品 '+n+' 个'+(m?('，规格库 '+m+' 个'):'（规格库未加载）')+'。每行填一个商品ID。'; gen(); }
+function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-gold').classList.toggle('on',t==='gold');document.getElementById('tb-table').classList.toggle('on',t==='table');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function guessUnit(name){
@@ -156,10 +175,10 @@ function buildEditors(ids){
   const area=document.getElementById('editArea'); if(!area) return;
   area.innerHTML=ids.map(id=>{
     const r=DATA[String(id)]||{}; const e=edits[id]||{};
-    const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[]));
-    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"></div>';
+    const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[])); const cat=(e.cat!=null?e.cat:'');
+    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"><input class="ec" placeholder="品名(表格用，留空=自动)" value="'+esc(cat)+'" data-id="'+esc(id)+'" data-f="cat"></div>';
   }).join('');
-  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else if(f==='name')edits[id].name=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }); });
+  area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else if(f==='name')edits[id].name=inp.value; else if(f==='cat')edits[id].cat=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }); });
 }
 async function gen(){
   const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean);
@@ -224,7 +243,68 @@ function goldCard(items){
   });
   return h+'<div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
 }
-function card(items){ return tpl==='red' ? redCard(items) : (tpl==='gold' ? goldCard(items) : whiteCard(items)); }
+var CAT_KW=['洗发水','沐浴露','护发素','润肤露','润肤霜','洗手液','洗衣液','消毒液','香皂','牙具','牙刷','牙膏','拖鞋','面巾','地巾','浴巾','方巾','毛巾','浴袍','浴衣','枕芯','枕套','被套','床单','被芯','保护垫','毛毯','床垫','床架','茶包','茶叶','咖啡','卷纸','抽纸','湿巾','纸巾','矿泉水','饮用水','纯净水','气泡水','洗沐套装','洗漱套装','护理包','梳子','剃须刀','棉签','浴帽','垃圾桶','衣架','电视','冰箱','空调','洗衣机','烧水壶','电水壶','吹风机','加湿器','咖啡机','灯具','餐具','保温杯','水杯','雨伞','拖鞋'];
+function guessCat(pkgName, cats, prodName){
+  const segs=String(pkgName||'').split(/[-—–_／/]/).map(s=>s.trim()).filter(Boolean);
+  // 1) 先按关键词判定（最稳）
+  const src=String(pkgName||'')+' '+String(prodName||'');
+  const kw=CAT_KW.find(k=>src.indexOf(k)>=0);
+  if(kw) return kw;
+  // 2) 再看是否是「规格型」套餐名（带数字/尺寸/括号说明）→ 不用它当品名
+  const specLike=s=>/\d/.test(s)||/[【\[（(]/.test(s)||/项目|大货|优惠|颜色|尺码|备注|包邮/.test(s);
+  const short=(segs||[]).find(s=>s.length>=2&&s.length<=8&&!specLike(s)&&!/装|款|型号|规格|样品|试样|试用|专拍/.test(s));
+  if(short) return short;
+  // 3) 组合装：含逗号且不像规格 → 用整段
+  const first=segs&&segs[0];
+  if(first&&/[,，]/.test(first)&&!specLike(first)) return first.slice(0,24);
+  // 4) 兜底：用三级类目的最后一级
+  const c=cats||[];
+  return c.length?c[c.length-1]:'';
+}
+function tblRows(items){
+  const rows=[];
+  items.forEach((it,pi)=>{
+    const sp=SPECS[String(it.id)]||null;
+    let list=(sp&&Array.isArray(sp.pk))?sp.pk.filter(x=>x&&x.n&&!/样品|试用装|试用|试样|专拍|补差|运费|邮费|一分/.test(x.n)):[];
+    if(!list.length) list=[{n:it.name,p:it.price,pic:'',tr:''}];
+    const e=edits[it.id]||{};
+    const std=(sp&&Array.isArray(sp.p))?sp.p:[];
+    list.forEach((pk,vi)=>{
+      rows.push({ pi:pi, id:it.id, first:(vi===0), cnt:list.length,
+        cat:(e.cat!=null&&e.cat!=='')?e.cat:guessCat(pk.n, sp&&sp.c, it.name),
+        img:(pk.pic||it.image), spec:pk.n, std:std,
+        price:(pk.p||it.price), unit:(it.unit||'件') });
+    });
+  });
+  rows.forEach((r,i)=>{
+    if(i===0||rows[i-1].cat!==r.cat){ let s=1; while(i+s<rows.length&&rows[i+s].cat===r.cat) s++; r.catSpan=s; } else r.catSpan=0;
+    r.prodSpan=r.first?r.cnt:0;
+  });
+  return rows;
+}
+function stdHTML(props){
+  if(!props||!props.length) return '<span style="color:#bbb">（详情页无参数）</span>';
+  return props.map((p,i)=>'<i>'+(i+1)+'.'+esc(p[0])+'：'+esc(p[1])+'</i>').join('');
+}
+function tableCard(items){
+  const rows=tblRows(items);
+  let body='';
+  rows.forEach(r=>{
+    body+='<tr>';
+    if(r.catSpan>0) body+='<td class="tcat" rowspan="'+r.catSpan+'">'+esc(r.cat)+'</td>';
+    if(r.prodSpan>0) body+='<td class="timg" rowspan="'+r.prodSpan+'">'+(r.img?'<img src="'+r.img+'" crossorigin="anonymous" onerror="this.style.visibility=\'hidden\'">':'<span style="color:#bbb">无图</span>')+'</td>';
+    body+='<td class="tspec">'+esc(r.spec)+'</td>';
+    if(r.prodSpan>0) body+='<td class="tstd" rowspan="'+r.prodSpan+'">'+stdHTML(r.std)+'</td>';
+    body+='<td class="tprice">'+esc(r.price)+'元/'+esc(r.unit)+'</td>';
+    body+='</tr>';
+  });
+  return '<div class="tcard"><table class="ttable">'
+    +'<colgroup><col style="width:135px"><col style="width:165px"><col style="width:245px"><col style="width:490px"><col style="width:113px"></colgroup>'
+    +'<thead><tr><th>品名</th><th>图片</th><th>规格</th><th>产品标准</th><th>价格</th></tr></thead>'
+    +'<tbody>'+body+'</tbody></table>'
+    +'<div class="ttip">共 '+rows.length+' 行（按套餐/规格自动展开）</div></div>';
+}
+function card(items){ return tpl==='red' ? redCard(items) : (tpl==='gold' ? goldCard(items) : (tpl==='table' ? tableCard(items) : whiteCard(items))); }
 async function exportPng(){
   if(!document.getElementById('cardBox').firstElementChild) await gen();
   const box=document.getElementById('cardBox');
