@@ -1,0 +1,29 @@
+name: EBK Login Test
+
+# 只验证「服务市场账号密码能否在 GitHub 服务器上登录并调通接口」
+# 不抓取、不修改任何数据，可安全重复运行
+
+on:
+  workflow_dispatch:
+
+jobs:
+  login-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright (chromium)
+        run: |
+          npm i --no-save playwright@1.47.2
+          npx playwright install --with-deps chromium
+
+      - name: Run login test
+        env:
+          EBK_USER: ${{ secrets.EBK_USER }}
+          EBK_PASS: ${{ secrets.EBK_PASS }}
+        run: node tools/ebk-login-test.mjs
