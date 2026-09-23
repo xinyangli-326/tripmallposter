@@ -113,6 +113,13 @@ button.gr{background:#5a8}
 .ttip{font-size:12px;color:#999;text-align:center;padding:6px 0 0}
 
 
+/* ========== 水印层（斜向「携程服务市场 TripMALL」，可开关） ========== */
+.wm{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:99}
+.wm i{position:absolute;font-family:"Microsoft YaHei",sans-serif;font-weight:700;font-size:26px;letter-spacing:2px;color:rgba(60,40,10,.085);white-space:nowrap;transform:rotate(-26deg);transform-origin:left top}
+.mcard{position:relative}
+.tcard{position:relative}
+
+
 </style>
 </head>
 <body>
@@ -123,6 +130,7 @@ button.gr{background:#5a8}
 <div class="mode"><button class="on" id="tb-white" onclick="setTpl('white')">白底模板</button><button id="tb-red" onclick="setTpl('red')">红色大促</button><button id="tb-gold" onclick="setTpl('gold')">金色推荐</button><button id="tb-table" onclick="setTpl('table')">表格模式</button></div>
 <label>版式</label>
 <div class="mode"><button class="on" id="mb-grid" onclick="setMode('grid')">4商品拼版</button><button id="mb-single" onclick="setMode('single')">单商品竖版</button></div>
+<label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer"><input type="checkbox" id="wmOn" style="width:auto;margin:0" onchange="WM=this.checked;gen()"> 添加水印（斜向「携程服务市场 TripMALL」）</label>
 <textarea id="ids">6517
 69047
 67461
@@ -140,7 +148,17 @@ button.gr{background:#5a8}
 </div>
 <div id="cardBox" hidden></div>
 <script>
-let mode='grid', tpl='white', DATA={}, SPECS={}, edits={}, idsKey='';
+let mode='grid', tpl='white', DATA={}, SPECS={}, edits={}, idsKey='', WM=false;
+function wmHTML(w,h){
+  const text='携程服务市场 TripMALL', stepX=330, stepY=190;
+  let out='';
+  for(let y=-140;y<h+160;y+=stepY){
+    for(let x=-180;x<w+240;x+=stepX){
+      out+='<i style="left:'+x+'px;top:'+y+'px">'+text+'</i>';
+    }
+  }
+  return '<div class="wm">'+out+'</div>';
+}
 try{ edits=JSON.parse(localStorage.getItem('tme_edits')||'{}'); }catch(e){ edits={}; }
 function saveEdits(){ try{ localStorage.setItem('tme_edits', JSON.stringify(edits)); }catch(e){} }
 function saveSnap(){ try{ const ids=document.getElementById('ids').value.trim().split(/\s+/).filter(Boolean); const snap={t:Date.now(), ids, edits:JSON.parse(JSON.stringify(edits))}; const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.unshift(snap); localStorage.setItem('tme_saved', JSON.stringify(s.slice(0,30))); renderHistory(); alert('已保存本轮编辑'); }catch(e){} }
@@ -189,6 +207,12 @@ async function gen(){
   const items=ids.map(id=>{ const r=DATA[String(id)]||{}; const e=edits[id]||{};
     return {id, name:(e.name!=null?e.name:(r.name||('商品'+id))), price:(e.price!=null?e.price:(r.price||'')), unit:(e.unit!=null?e.unit:(guessUnit(r.name)||r.unit||'件')), tags:(Array.isArray(e.tags)?e.tags:(Array.isArray(r.tags)&&r.tags.length?r.tags:[])), image:r.image||''}; });
   const box=document.getElementById('cardBox'); box.innerHTML=card(items);
+  if(WM){ const el=box.firstElementChild; if(el&&!el.querySelector('.wm')){
+    const prev=box.hidden; box.hidden=false;
+    const w=el.offsetWidth||800, h=el.offsetHeight||1000;
+    box.hidden=prev;
+    el.insertAdjacentHTML('beforeend', wmHTML(w,h));
+  } }
   const pv=document.getElementById('preview'); pv.innerHTML=''; if(box.firstElementChild) pv.appendChild(box.firstElementChild.cloneNode(true));
 }
 function whiteCard(items){
