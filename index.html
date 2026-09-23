@@ -28,6 +28,17 @@ button.gr{background:#5a8}
 .hist-row .ht{color:#aaa;font-size:10px}
 .hist-row button{margin:0;padding:2px 8px;font-size:12px;background:#5a8;color:#fff;border:0;border-radius:5px;cursor:pointer}
 
+/* ===== 数据更新 ===== */
+.upd-wrap{border:1px solid #eee;border-radius:8px;padding:10px;margin-top:10px;background:#fafafa}
+.upd-time{font-size:12px;color:#666;line-height:1.6}
+.upd-time b{color:#c05a00}
+.upd-report{font-size:12px;color:#444;margin-top:6px;line-height:1.6}
+.upd-report b.up{color:#c00}.upd-report b.down{color:#2a8}
+.pbar{height:10px;background:#eee;border-radius:6px;overflow:hidden;margin:8px 0 4px}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e08a00,#f0b46b);transition:width .3s}
+.upd-msg{font-size:12px;color:#555;line-height:1.5}
+.upd-detail{font-size:12px;color:#888;margin-top:2px}
+
 /* ========== 白底模板 ========== */
 .mcard{width:740px;background:#fff;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .mheadimg{width:100%;display:block}
@@ -142,6 +153,17 @@ button.gr{background:#5a8}
 <div id="editArea"></div>
 <button style="margin-top:6px;background:#5a8" onclick="saveSnap()">保存本轮编辑</button><button style="margin-top:6px;margin-left:4px" onclick="renderHistory()">查看保存记录</button>
 <div id="histArea"></div>
+<div class="upd-wrap">
+  <div class="upd-time" id="updTime">数据更新时间：加载中…</div>
+  <div class="upd-report" id="updReport"></div>
+  <button style="margin-top:8px" onclick="checkUpdate()">检查更新</button>
+  <button style="margin-top:8px;margin-left:4px;background:#5a8" onclick="reloadData()">刷新数据</button>
+  <div id="updPanel" style="display:none;margin-top:8px">
+    <div class="pbar"><i id="pbarI"></i></div>
+    <div class="upd-msg" id="updMsg"></div>
+    <div class="upd-detail" id="updDetail"></div>
+  </div>
+</div>
 <button onclick="gen()">生成</button><button class="gr" onclick="exportPng()">导出 PNG</button>
 </div>
 <div class="right"><div id="preview"></div></div>
@@ -165,10 +187,55 @@ function saveSnap(){ try{ const ids=document.getElementById('ids').value.trim().
 function renderHistory(){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const el=document.getElementById('histArea'); if(!el) return; if(!s.length){ el.innerHTML='<div class="edithint">暂无保存记录。点「保存本轮编辑」即可保存。</div>'; return; } el.innerHTML=s.map((x,i)=>'<div class="hist-row"><span class="ht">'+new Date(x.t).toLocaleString()+'</span><span class="hv">'+esc(x.ids.join(','))+'</span><button onclick="applySnap('+i+')">应用</button><button onclick="delSnap('+i+')" style="background:#c00">删除</button></div>').join(''); }catch(e){ const el=document.getElementById('histArea'); if(el) el.innerHTML=''; } }
 function applySnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); const x=s[i]; if(!x) return; edits=JSON.parse(JSON.stringify(x.edits)); saveEdits(); document.getElementById('ids').value=x.ids.join('\n'); idsKey=''; gen(); }catch(e){} }
 function delSnap(i){ try{ const s=JSON.parse(localStorage.getItem('tme_saved')||'[]'); s.splice(i,1); localStorage.setItem('tme_saved', JSON.stringify(s)); renderHistory(); }catch(e){} }
-async function loadData(){ try{ DATA = await fetch('data/products.json?v=4').then(r=>r.json()); }catch(e){ DATA={}; }
-  try{ SPECS = await fetch('data/specs.json?v=1').then(r=>r.json()); }catch(e){ SPECS={}; }
+async function loadData(bust){ const q=bust?('?v='+Date.now()):'?v=4';
+  try{ DATA = await fetch('data/products.json'+q).then(r=>r.json()); }catch(e){ DATA={}; }
+  try{ SPECS = await fetch('data/specs.json'+(bust?('?v='+Date.now()):'?v=1')).then(r=>r.json()); }catch(e){ SPECS={}; }
   const n=Object.keys(DATA).length, m=Object.keys(SPECS).length;
-  document.getElementById('hint').innerText = '已加载商品 '+n+' 个'+(m?('，规格库 '+m+' 个'):'（规格库未加载）')+'。每行填一个商品ID。'; gen(); }
+  document.getElementById('hint').innerText = '已加载商品 '+n+' 个'+(m?('，规格库 '+m+' 个'):'（规格库未加载）')+'。每行填一个商品ID。'; gen(); loadMeta(); }
+/* ===== 数据更新：时间 / 报表 / 检查更新（轮询本机 8790 端口） ===== */
+var META=null, updTimer=null;
+async function loadMeta(){ try{ META=await fetch('data/update-meta.json?v='+Date.now()).then(r=>r.json()); }catch(e){ META=null; } renderMeta(); }
+function renderMeta(){
+  var t=document.getElementById('updTime'); if(!t) return;
+  if(META&&META.updatedAtCN){ t.innerHTML='数据更新时间：<b>'+esc(META.updatedAtCN)+'</b>　共 '+META.totalProducts+' 个商品'; }
+  else { t.innerText='数据更新时间：未知（尚未执行过更新）'; }
+  var r=document.getElementById('updReport'); if(!r) return;
+  if(META&&(META.newProducts||META.priceUp||META.priceDown)){
+    r.innerHTML='上次更新：新增 <b>'+META.newProducts+'</b> 个 · 涨价 <b class="up">'+META.priceUp+'</b> · 降价 <b class="down">'+META.priceDown+'</b>';
+  } else { r.innerHTML=''; }
+}
+function checkUpdate(){
+  var p=document.getElementById('updPanel'); if(p) p.style.display='block';
+  var m=document.getElementById('updMsg'); if(m) m.innerText='正在检测本机更新程序…';
+  if(updTimer) clearInterval(updTimer);
+  pollProgress();
+  updTimer=setInterval(pollProgress,2000);
+}
+async function pollProgress(){
+  var msg=document.getElementById('updMsg'), det=document.getElementById('updDetail'), bar=document.getElementById('pbarI');
+  try{
+    var r=await fetch('http://127.0.0.1:8790/?t='+Date.now(),{cache:'no-store'});
+    var j=await r.json();
+    var pct=j.total?Math.round(j.done/j.total*100):0;
+    if(bar) bar.style.width=pct+'%';
+    if(msg) msg.innerText=j.message||'';
+    if(det) det.innerText='进度 '+j.done+' / '+j.total+'（'+pct+'%）';
+    if(j.state==='done'){
+      if(updTimer){clearInterval(updTimer);updTimer=null;}
+      if(det) det.innerHTML='进度 '+j.done+' / '+j.total+'（'+pct+'%）<br><b style="color:#2a8">更新完成，点「刷新数据」即可用最新数据</b>';
+      loadMeta();
+    }
+    if(j.state==='error'){
+      if(updTimer){clearInterval(updTimer);updTimer=null;}
+      if(det) det.innerHTML='<b style="color:#c00">'+esc(j.message||'出错')+'</b>';
+    }
+  }catch(e){
+    if(msg) msg.innerHTML='未检测到本机更新程序。请双击电脑上的 <b>检查更新.bat</b>，本页会自动显示进度。';
+    if(bar) bar.style.width='0%';
+    if(det) det.innerText='';
+  }
+}
+async function reloadData(){ await loadData(true); await loadMeta(); alert('数据已刷新'); }
 function setTpl(t){tpl=t;document.getElementById('tb-white').classList.toggle('on',t==='white');document.getElementById('tb-red').classList.toggle('on',t==='red');document.getElementById('tb-gold').classList.toggle('on',t==='gold');document.getElementById('tb-table').classList.toggle('on',t==='table');gen();}
 function setMode(m){mode=m;document.getElementById('mb-grid').classList.toggle('on',m==='grid');document.getElementById('mb-single').classList.toggle('on',m==='single');gen();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
