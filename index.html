@@ -298,7 +298,7 @@ function buildEditors(ids){
   area.innerHTML=ids.map(id=>{
     const r=DATA[String(id)]||{}; const e=edits[id]||{};
     const name=(e.name!=null?e.name:(r.name||('商品'+id))); const price=(e.price!=null?e.price:(r.price||'')); const unit=unitOf(id, r.name, e); const tags=(e.tags!=null?e.tags:(Array.isArray(r.tags)?r.tags:[])); const cat=(e.cat!=null?e.cat:'');
-    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"><input class="ec" placeholder="品名(表格用，留空=自动)" value="'+esc(cat)+'" data-id="'+esc(id)+'" data-f="cat"><input class="es" placeholder="产品标准(表格用，留空=自动抓取)" value="'+esc(e.std!=null?e.std:'')+'" data-id="'+esc(id)+'" data-f="std"></div>';
+    return '<div class="edit-row"><span class="eid">'+esc(id)+'</span><input class="en" placeholder="商品名" value="'+esc(name)+'" data-id="'+esc(id)+'" data-f="name"><input class="ep" placeholder="价格" value="'+esc(price)+'" data-id="'+esc(id)+'" data-f="price"><input class="eu" placeholder="单位" value="'+esc(unit)+'" data-id="'+esc(id)+'" data-f="unit"><input class="et" placeholder="标签(逗号分隔)" value="'+esc(tags.join(','))+'" data-id="'+esc(id)+'" data-f="tags"><input class="ec" placeholder="类目(表格用，留空=三级类目)" value="'+esc(cat)+'" data-id="'+esc(id)+'" data-f="cat"><input class="es" placeholder="产品标准(表格用，留空=自动抓取)" value="'+esc(e.std!=null?e.std:'')+'" data-id="'+esc(id)+'" data-f="std"></div>';
   }).join('');
   area.querySelectorAll('input').forEach(inp=>{ inp.addEventListener('input',()=>{ const id=inp.getAttribute('data-id'), f=inp.getAttribute('data-f'); edits[id]=edits[id]||{}; if(f==='price')edits[id].price=inp.value; else if(f==='unit')edits[id].unit=inp.value; else if(f==='name')edits[id].name=inp.value; else if(f==='cat')edits[id].cat=inp.value; else if(f==='std')edits[id].std=inp.value; else edits[id].tags=inp.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean); saveEdits(); gen(); }); });
 }
@@ -473,7 +473,7 @@ function tableCard(items){
   });
   return '<div class="tcard"><table class="ttable">'
     +'<colgroup><col style="width:135px"><col style="width:165px"><col style="width:245px"><col style="width:490px"><col style="width:113px"></colgroup>'
-    +'<thead><tr><th>品名</th><th>图片</th><th>规格</th><th>产品标准</th><th>价格</th></tr></thead>'
+    +'<thead><tr><th>类目</th><th>图片</th><th>规格</th><th>产品标准</th><th>价格</th></tr></thead>'
     +'<tbody>'+body+'</tbody></table>'
     +'<div class="ttip">共 '+rows.length+' 行（按套餐/规格自动展开）</div></div>';
 }
