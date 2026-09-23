@@ -38,6 +38,9 @@ button.gr{background:#5a8}
 .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e08a00,#f0b46b);transition:width .3s}
 .upd-msg{font-size:12px;color:#555;line-height:1.5}
 .upd-detail{font-size:12px;color:#888;margin-top:2px}
+.upd-banner{display:none;background:#fff8ec;border:1px solid #f0c987;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#8a5a00;line-height:1.7}
+.upd-banner b.up{color:#c00}.upd-banner b.down{color:#2a8}
+.upd-banner button{background:#e08a00;color:#fff;border:0;border-radius:6px;padding:5px 12px;font-size:13px;margin-left:8px;cursor:pointer}
 
 /* ========== 白底模板 ========== */
 .mcard{width:740px;background:#fff;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
@@ -166,7 +169,7 @@ button.gr{background:#5a8}
 </div>
 <button onclick="gen()">生成</button><button class="gr" onclick="exportPng()">导出 PNG</button>
 </div>
-<div class="right"><div id="preview"></div></div>
+<div class="right"><div class="upd-banner" id="updBanner"></div><div id="preview"></div></div>
 </div>
 <div id="cardBox" hidden></div>
 <script>
@@ -368,13 +371,58 @@ function goldCard(items){
   });
   return h+'<div class="gpanel"><img src="gold_panel.png" alt=""></div><div class="gqr"><img src="qr.png" alt="QR"></div></div>';
 }
-var CAT_KW=['洗发水','沐浴露','护发素','润肤露','润肤霜','洗手液','洗衣液','消毒液','香皂','牙具','牙刷','牙膏','拖鞋','面巾','地巾','浴巾','方巾','毛巾','浴袍','浴衣','枕芯','枕套','被套','床单','被芯','保护垫','毛毯','床垫','床架','茶包','茶叶','咖啡','卷纸','抽纸','湿巾','纸巾','矿泉水','饮用水','纯净水','气泡水','洗沐套装','洗漱套装','护理包','梳子','剃须刀','棉签','浴帽','垃圾桶','衣架','电视','冰箱','空调','洗衣机','烧水壶','电水壶','吹风机','加湿器','咖啡机','灯具','餐具','保温杯','水杯','雨伞','拖鞋'];
+/* 品名映射表：正则 → 规范名（越靠前越优先） */
+var CAT_MAP=[
+  [/[,，].*(洗发|沐浴|护发|润肤|香皂).*(洗发|沐浴|护发|润肤|香皂)/,'洗沐套装'],
+  [/洗漱套装|洗护套装|洗沐套装|洗漱六件|六小件|洗漱包|护理包|洗漱组/,'洗漱套装'],
+  [/拖鞋|凉拖|布拖|拉毛绒|麻布拖|无纺布拖|绵柔布拖|华夫格拖|踩屎感/,'拖鞋'],
+  [/洗发露|洗发液|洗发水|洗发膏|香波|洗发/,'洗发水'],
+  [/沐浴液|沐浴露|沐浴油|沐浴乳|沐浴/,'沐浴露'],
+  [/护发素|护发乳|发膜|护发/,'护发素'],
+  [/润肤露|润肤乳|润肤霜|身体乳|润肤/,'润肤露'],
+  [/洗手液|洗手露|洗手皂|洗手/,'洗手液'],
+  [/香皂|肥皂|净皂|皂\b/,'香皂'],
+  [/牙具|牙刷|牙膏|牙线|漱口水|牙签/,'牙具'],
+  [/浴帽/,'浴帽'],
+  [/梳子|头梳|木梳/,'梳子'],
+  [/剃须|刮胡|剃刀/,'剃须刀'],
+  [/棉签|化妆棉|棉片/,'棉签'],
+  [/卷纸|空心卷|有芯卷|卫生纸|厕纸|小卷纸/,'卷纸'],
+  [/大盘纸|大卷纸/,'大盘纸'],
+  [/擦手纸|抹手纸/,'擦手纸'],
+  [/抽纸|面巾纸|餐巾纸|软抽/,'抽纸'],
+  [/湿巾/,'湿巾'],
+  [/纸巾/,'纸巾'],
+  [/洗衣液|洗衣凝珠|洗衣粉|洗衣皂/,'洗衣液'],
+  [/消毒|除菌|酒精/,'消毒液'],
+  [/垃圾袋/,'垃圾袋'],
+  [/垃圾桶/,'垃圾桶'],
+  [/矿泉水|饮用水|纯净水|天然水|山泉|气泡水|苏打水/,'饮用水'],
+  [/茶包|袋泡茶|茶叶|红茶|绿茶|乌龙|普洱|白茶|龙井/,'茶叶'],
+  [/咖啡/,'咖啡'],
+  [/床垫|床褥/,'床垫'],
+  [/枕芯|枕头|抱枕/,'枕芯'],
+  [/枕套/,'枕套'],
+  [/被套/,'被套'],
+  [/床单/,'床单'],
+  [/被芯|被子|羽丝绒|羽绒被|夏被|冬被/,'被芯'],
+  [/浴巾/,'浴巾'],
+  [/面巾|毛巾|方巾/,'面巾'],
+  [/地巾|地垫|防滑垫/,'地巾'],
+  [/浴袍|浴衣|睡袍/,'浴袍'],
+  [/衣架/,'衣架']
+];
 function guessCat(pkgName, cats, prodName){
-  const segs=String(pkgName||'').split(/[-—–_／/]/).map(s=>s.trim()).filter(Boolean);
-  // 1) 先按关键词判定（最稳）
-  const src=String(pkgName||'')+' '+String(prodName||'');
-  const kw=CAT_KW.find(k=>src.indexOf(k)>=0);
-  if(kw) return kw;
+  // 优先用「服务市场三级类目」（如：大瓶洗沐 / 小支洗沐 / 枕套 / 床垫 / 拖鞋）
+  const chain=cats||[];
+  if(chain.length) return chain[chain.length-1];
+  const src=String(pkgName||'');
+  // 1) 套餐名里找关键词（最准）
+  for(let i=0;i<CAT_MAP.length;i++){ if(src&&CAT_MAP[i][0].test(src)) return CAT_MAP[i][1]; }
+  // 2) 商品名里找关键词
+  const prod=String(prodName||'');
+  for(let i=0;i<CAT_MAP.length;i++){ if(prod&&CAT_MAP[i][0].test(prod)) return CAT_MAP[i][1]; }
+  const segs=src.split(/[-—–_／/]/).map(s=>s.trim()).filter(Boolean);
   // 2) 再看是否是「规格型」套餐名（带数字/尺寸/括号说明）→ 不用它当品名
   const specLike=s=>/\d/.test(s)||/[【\[（(]/.test(s)||/项目|大货|优惠|颜色|尺码|备注|包邮/.test(s);
   const short=(segs||[]).find(s=>s.length>=2&&s.length<=8&&!specLike(s)&&!/装|款|型号|规格|样品|试样|试用|专拍/.test(s));
